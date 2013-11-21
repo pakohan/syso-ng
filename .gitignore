@@ -10,13 +10,9 @@
 # Normal rules
 #
 
-linux-3.10.16/usr/initramfs/
-busybox-1.21.1/busybox.links
+linux-*
+busybox-*
 V1/initramfsconfig
-linux-3.10.16/initramfsconfig
-linux-3.10.16/usr/files/
-linux-3.4.68/initramfsconfig
-linux-3.4.68/usr/initramfs/
 
 server.host
 
