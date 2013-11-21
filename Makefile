@@ -6,9 +6,12 @@ LV=3.4.70
 linux-archive=linux-${LV}.tar.xz
 linux-folder=linux-${LV}
 
+BRoot-archive=buildroot-2012.08.tar.bz2
+BRoot-folder=buildroot-2012.08
+
 .PHONY: all clean clean-dl
 
-all: ${BBox-folder} ${linux-folder}
+all: ${BBox-folder} ${linux-folder} ${BRoot-folder}
 
 ${BBox-archive}:
 	wget http://busybox.net/downloads/busybox-1.21.1.tar.bz2
@@ -22,8 +25,14 @@ ${linux-archive}:
 ${linux-folder}: ${linux-archive}
 	tar xJf $<
 
+${BRoot-archive}:
+	wget http://buildroot.uclibc.org/downloads/buildroot-2012.08.tar.bz2
+
+${BRoot-folder}: ${BRoot-archive}
+	tar xvjf $<
+
 clean:
-	rm -rf ${BBox-folder} ${linux-folder}
+	rm -rf ${BBox-folder} ${linux-folder} ${BRoot-folder}
 
 clean-dl: clean
-	rm ${BBox-archive} ${linux-archive}
+	rm ${BBox-archive} ${linux-archive} ${BRoot-archive}

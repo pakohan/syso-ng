@@ -12,6 +12,7 @@
 
 linux-*
 busybox-*
+buildroot-*
 V1/initramfsconfig
 
 server.host
