@@ -6,8 +6,8 @@ LV=3.4.70
 linux-archive=linux-${LV}.tar.xz
 linux-folder=linux-${LV}
 
-BRoot-archive=buildroot-2012.08.tar.bz2
-BRoot-folder=buildroot-2012.08
+BRoot-archive=buildroot-2013.08.1.tar.bz2
+BRoot-folder=buildroot-2013.08.1
 
 .PHONY: all clean clean-dl
 
@@ -26,10 +26,10 @@ ${linux-folder}: ${linux-archive}
 	tar xJf $<
 
 ${BRoot-archive}:
-	wget http://buildroot.uclibc.org/downloads/buildroot-2012.08.tar.bz2
+	wget http://buildroot.uclibc.org/downloads/buildroot-2013.08.1.tar.bz2
 
 ${BRoot-folder}: ${BRoot-archive}
-	tar xvjf $<
+	tar xjf $<
 
 clean:
 	rm -rf ${BBox-folder} ${linux-folder} ${BRoot-folder}
