@@ -3,60 +3,59 @@
 
 USERPROG=../${BROOT_VERSION}/output/${KERNEL_VERSION}/usr/initramfs/bin/hello
 ROOTFS=../${BROOT_VERSION}/output/${KERNEL_VERSION}/usr/initramfs
-LINUX_CONFIG=../${BROOT_VERSION}/output/${KERNEL_VERSION}/.config
+LINUX_CONFIG=../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/.config
+BUSYBOX_CONFIG=../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config
+BROOT_CONFIG=../${BROOT_VERSION}/.config
 
-.PHONY: all clean clean-rootfs config-linux config-busybox start config-buildroot
+.PHONY: all clean start ${TARGET}
 
 .NOTPARALLEL:
 
 all: ${TARGET}
 
-start: ${TARGET}
-	${QEMU} -kernel ${TARGET} -qmp tcp:localhost:25565,server,nowait
+start: #${TARGET}
+	${QEMU} -kernel ${TARGET}
 
-
-config-buildroot:
+buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config
-	make -C ../${BROOT_VERSION} menuconfig
+	make -C ../${BROOT_VERSION} nconfig
 	cp ../${BROOT_VERSION}/.config config-buildroot
 
-config-linux:
+linux-config:
 	cp config-linux ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/.config
 	make -C ../${BROOT_VERSION} linux-nconfig
 	cp ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/.config ../${BROOT_VERSION}/board/qemu/arm-versatile/${KERNEL_VERSION}.config
 	cp ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/.config config-linux
 
-config-busybox:
+busybox-config:
 	cp config-busybox ../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config
 	make -C ../${BROOT_VERSION} busybox-menuconfig
 	cp ../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config ../${BROOT_VERSION}/package/busybox/${BBOX_VERSION}.config
 	cp ../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config config-busybox
 
 
-${TARGET}: ${ROOTFS} ${LINUX_CONFIG} ${BUSYBOX_CONFIG}
-	#sh ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/scripts/gen_initramfs_list.sh ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/usr/initramfs/ > ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/initramfsconfig
-	#cat initramfsconfig_nodes >> ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/initramfsconfig
-	make -C ../${BROOT_VERSION}
+${TARGET}: ${LINUX_CONFIG} ${BUSYBOX_CONFIG} ${BROOT_CONFIG}
+	rm -f ../${BROOT_VERSION}/output/target/usr/bin/userprog
+	rm -rf ../${BROOT_VERSION}/output/build/userprog-1.0/
+	rm -f ../${BROOT_VERSION}/output/images/zImage
+	make -C ../${BROOT_VERSION} -j ${JOBS}
 
+${BUSYBOX_CONFIG}: config-busybox
+	cp config-busybox ../${BROOT_VERSION}/package/busybox/${BBOX_VERSION}.config
+	cp config-busybox ../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config
 
-
-
-${ROOTFS}:
-	#cp -R initramfs ../${BROOT_VERSION}/output/${KERNEL_VERSION}/usr
-
-${USERPROG}: ${ROOTFS} init.c
-	mkdir -p ${ROOTFS}/bin/
-	${CROSS_COMPILE}gcc -s -static ${EXTRA_CFLAGS} init.c -o $@
-
-${BUSYBOX_CONFIG}:
-	cp config-busybox /${BROOT_VERSION}/package/busybox/${BBOX_VERSION}.config
-	cp config-busybox /${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config
-
-${LINUX_CONFIG}:
+${LINUX_CONFIG}: config-linux
 	cp config-linux ../${BROOT_VERSION}/board/qemu/arm-versatile/${KERNEL_VERSION}.config
 	cp config-linux ../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/.config
 
-clean: clean-rootfs
+${BROOT_CONFIG}: config-buildroot
+	cp config-buildroot ../${BROOT_VERSION}/.config
 
-clean-rootfs:
-	
+clean:
+	rm -rf ../${BROOT_VERSION}
+	tar xjf ../${BROOT_VERSION}.tar.bz2 -C ../
+	cp -R dl ../${BROOT_VERSION}/
+	mkdir -p ../${BROOT_VERSION}/output/build/linux-3.10.7/
+	mkdir -p ../${BROOT_VERSION}/output/build/busybox-1.21.1/
+	cp Config.in ../${BROOT_VERSION}/package/
+	cp -R userprog ../${BROOT_VERSION}/package/
