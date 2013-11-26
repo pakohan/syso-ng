@@ -7,14 +7,21 @@ LINUX_CONFIG=../${BROOT_VERSION}/output/build/${KERNEL_VERSION}/.config
 BUSYBOX_CONFIG=../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config
 BROOT_CONFIG=../${BROOT_VERSION}/.config
 
-.PHONY: all clean start ${TARGET}
+.PHONY: all clean start debug ${TARGET}
 
 .NOTPARALLEL:
 
 all: ${TARGET}
 
-start: #${TARGET}
+start: ${TARGET}
 	${QEMU} -kernel ${TARGET}
+
+debug: ${TARGET}
+	${QEMU} ${DEBUG} -kernel ${TARGET}
+
+gdb:
+	@echo "target extended-remote ip:port"
+	/opt/toolchains/Sourcery-CodeBench-ARM-2013.05/bin/arm-none-linux-gnueabi-gdb
 
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config
