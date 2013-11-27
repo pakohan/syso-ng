@@ -23,7 +23,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Patrick Kohan Tobias Birkle");
-MODULE_DESCRIPTION("Unser erstes Modul");
+MODULE_DESCRIPTION("Unser zweites Modul");
 
 static int __init ModInit(void)
 {

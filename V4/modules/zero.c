@@ -30,13 +30,13 @@ Makefile anpassen:
 
 #### Durchführung
 
-  1. Ergänzen Sie Ihren Treiber um eine driver_read()-Funktion, die das virtuelle Gerät „/dev/zero“ implementiert. Dieses Gerät soll bei Leseanfragen jeweils eine 0 zurückgeben.
+  1. Ergänzen Sie Ihren Treiber um eine driver_read()-Funktion, die das virtuelle Gerät "/dev/zero" implementiert. Dieses Gerät soll bei Leseanfragen jeweils eine 0 zurückgeben.
   2. Testen Sie den Treiber mit Hilfe des cat- und des hexdump-Kommandos:
     ```cat geraetedatei | hexdump``
-  3. Die Lesefunktion soll '0' liefern, wenn die Minornummer »0« beträgt. Wird der Treiber mit einer Minornummer »1« aufgerufen, gibt er „hello world“ zurück.
+  3. Die Lesefunktion soll '0' liefern, wenn die Minornummer »0« beträgt. Wird der Treiber mit einer Minornummer »1« aufgerufen, gibt er "hello world" zurück.
   4. Testen Sie den Treiber mit Hilfe des cat-Kommandos.
   5. Begründen Sie, warum cat den String wiederholt ausgibt.
-  6. Erweitern Sie Ihre Applikation, um den String „hello world“ vom Treiber zu lesen.
+  6. Erweitern Sie Ihre Applikation, um den String "hello world" vom Treiber zu lesen.
 */
 
 static int major;
@@ -47,14 +47,14 @@ static int __init hello_setup(void)
 	if((major=register_chrdev(0,"TestDriver",&fops))==0) {
 		return -EIO;
 	}
-	printk("<1>init_module called: %d\n", major);
+	printk(KERN_INFO "init_module called: %d\n", major);
 	return 0;
 }
 
 static void __exit hello_cleanup(void)
 {
 	unregister_chrdev( major, "TestDriver" );
-	printk("<1>cleanup_module called\n");
+	printk(KERN_INFO "cleanup_module called\n");
 }
 
 static int driver_open( struct inode *device, struct file *instance )
