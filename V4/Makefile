@@ -1,7 +1,7 @@
 -include variables
 -include ../server.host
 
-.PHONY: all clean start debug ${TARGET} module
+.PHONY: all clean start debug ${TARGET} modules
 
 .NOTPARALLEL:
 
@@ -17,11 +17,11 @@ gdb:
 	@echo "target extended-remote ip:port"
 	${CROSS_CC}gdb
 
-module:
-	CROSS_COMPILE=${CROSS_CC} make -C ${LINUX_DIR} M=$(PWD)/module ARCH=arm
+modules:
+	CROSS_COMPILE=${CROSS_CC} make -C ${LINUX_DIR} M=$(PWD)/modules ARCH=arm
 
-copy-module:
-	scp module/*.ko root@192.168.29.166:/lib/modules/${KERNEL_VERSION}/kernel/drivers
+copy-modules:
+	scp modules/*.ko root@192.168.29.166:/lib/modules/${KERNEL_VERSION}/kernel/drivers
 
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config
@@ -67,5 +67,5 @@ clean:
 	cp Config.in ../${BROOT_VERSION}/package/
 	cp -R userprog ../${BROOT_VERSION}/package/
 
-clean-modules:
-	make -C module clean
+modules-clean:
+	make -C modules clean

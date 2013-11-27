@@ -1,4 +1,4 @@
-TP_SOURCES=$(wildcard $(PWD)/*.c)
+TP_SOURCES=driver.c  hello.c  mod1.c  null.c  openclose.c  template.c  zero.c
 TP_OBJECTS=$(TP_SOURCES:.c=.o)
 
 ifneq ($(KERNELRELEASE),)
@@ -13,4 +13,4 @@ default:
 endif
 
 clean:
-	rm -rf *.o *.ko *.mod.c *.order *.symvers .*
+	rm -rf *.o *.ko *.mod.c *.order *.symvers .*cmd .tmp_versions
