@@ -7,6 +7,38 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
+/*
+### Virtuelles Gerät (```/dev/zero```)
+
+#### Ziele
+
+  * Implementierung des original ```/dev/zero``` Gerätes,
+  * Auswertung der Minor Number.
+
+#### Vorbereitung
+
+Quelldatei erstellen:
+
+* Erstellen Sie auf Basis des Templates eine Datei namens ```zero.c```.
+
+Makefile anpassen:
+
+* Modifizieren Sie das Makefile. Ändern Sie den Namen für die zu compilierende Datei in ```zero```.
+
+
+* Was macht das Device ```/dev/zero```?
+
+#### Durchführung
+
+  1. Ergänzen Sie Ihren Treiber um eine driver_read()-Funktion, die das virtuelle Gerät „/dev/zero“ implementiert. Dieses Gerät soll bei Leseanfragen jeweils eine 0 zurückgeben.
+  2. Testen Sie den Treiber mit Hilfe des cat- und des hexdump-Kommandos:
+    ```cat geraetedatei | hexdump``
+  3. Die Lesefunktion soll '0' liefern, wenn die Minornummer »0« beträgt. Wird der Treiber mit einer Minornummer »1« aufgerufen, gibt er „hello world“ zurück.
+  4. Testen Sie den Treiber mit Hilfe des cat-Kommandos.
+  5. Begründen Sie, warum cat den String wiederholt ausgibt.
+  6. Erweitern Sie Ihre Applikation, um den String „hello world“ vom Treiber zu lesen.
+*/
+
 static int major;
 static struct file_operations fops;
 
@@ -50,7 +82,7 @@ static ssize_t driver_write( struct file *instanz, const char *user, size_t coun
 {
 	int to_copy;
 	int not_copied;
-	char buf[10]; 
+	char buf[10];
 
 	to_copy = min( 10, count);
 	not_copied = copy_from_user( buf, user, to_copy );

@@ -7,6 +7,32 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
+/*
+### Lesefunktion
+
+#### Ziele
+
+  * Lesefunktion im Treiber realisieren
+  * Daten zwischen Kernel- und User-Space austauschen
+
+#### Vorbereitung
+
+Quelldatei erstellen:
+
+  * Erstellen Sie auf Basis des Templates eine Datei namens ```hello.c```.
+
+Makefile anpassen:
+
+  * Modifizieren Sie das Makefile. Ändern Sie den Namen für die zu compilierende Datei in ```hello```.
+
+#### Durchführung
+
+  1. Erweitern Sie das Codefragment um eine Lese-Funktion, die beim lesenden Zugriff einer Applikation den String 'Hello World' zurückgibt.
+  2. Starten Sie den Generierungsprozess durch Eingabe von **make**.
+  3. Testen Sie den Treiber mit dem Systemprogramm **cat**. Ihr Treiber liefert ständig »hello world« zurück. Warum?
+  4. Testen Sie den Treiber mit Hilfe einer selbst erstellten Applikation.
+*/
+
 static int major;
 static struct file_operations fops;
 
@@ -50,7 +76,7 @@ static ssize_t driver_write( struct file *instanz, const char *user, size_t coun
 {
 	int to_copy;
 	int not_copied;
-	char buf[10]; 
+	char buf[10];
 
 	to_copy = min( 10, count);
 	not_copied = copy_from_user( buf, user, to_copy );

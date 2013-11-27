@@ -2,74 +2,54 @@
 #define LINUX
 #define __KERNEL__
 
-#include <linux/version.h>
+#include <linux/init.h>
 #include <linux/module.h>
-#include <linux/fs.h>
-#include <asm/uaccess.h>
 
-static int major;
-static struct file_operations fops;
+/*
+###  Kernel Modul
 
-static int __init hello_setup(void)
-{
-	if((major=register_chrdev(0,"TestDriver",&fops))==0) {
-		return -EIO;
-	}
-	printk("<1>init_module called: %d\n", major);
-	return 0;
-}
+#### Ziele
 
-static void __exit hello_cleanup(void)
-{
-	unregister_chrdev( major, "TestDriver" );
-	printk("<1>cleanup_module called\n");
-}
+  * Sie lernen den Umgang mit Modulen.
+  * Sie lernen den Aufbau einfacher Module kennen.
 
-static int driver_open( struct inode *device, struct file *instance )
-{
-	return 0;
-}
+#### Vorbereitung
 
-static int driver_close( struct inode *device, struct file *instance )
-{
-	return 0;
-}
+##### Debug Ausgaben
 
-static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
-{
-	int not_copied, to_copy;
-	char* hello_world = "hello world";
+Mit dem Befehl ```dmesg``` können Sie sich die letzten Systemmeldungen anzeigen lassen
 
-	to_copy = strlen(hello_world)+1;
-	to_copy = min( to_copy, count );
-	not_copied = copy_to_user( user, hello_world, to_copy);
-	return to_copy-not_copied;
-}
+#### Durchführung
 
-static ssize_t driver_write( struct file *instanz, const char *user, size_t count, loff_t *offs )
-{
-	int to_copy;
-	int not_copied;
-	char buf[10]; 
+  * Starten Sie einen Editor und geben Sie das vorgestellte Treiber Codegerüst ein. Speichern Sie die editierte Datei unter dem Namen mod1.c
+  * Geben Sie im Editor das vorgestellte Makefile ein. Speichern Sie die Eingaben unter dem Dateinamen Makefile ab.
 
-	to_copy = min( 10, count);
-	not_copied = copy_from_user( buf, user, to_copy );
-	printk(">%s<", buf );
-	return to_copy-not_copied;
-}
+**ACHTUNG!** Bitte auf Groß- und Kleinschreibung achten.
 
-static struct file_operations fops = {
-	.owner = THIS_MODULE,
-	.open = driver_open,
-	.release = driver_close,
-	.read = driver_read,
-	.write = driver_write,
-	/*.poll = driver_poll,*/
-};
+  * Starten Sie den Generierungsprozess durch Eingabe von **make**
+  * Testen Sie Ihr Modul, indem Sie es:
+    1. laden (**insmod ...**),
+    2. anzeigen lassen (**lsmod**),
+    3. und wieder entfernen (**rmmod ...**)
+  * Beachten Sie die Ausgaben in den Systemmeldungen
 
-module_init( hello_setup );
-module_exit( hello_cleanup );
+**HINWEIS!** Beim Laden des Moduls wird der komplette Modulname angegeben mod1.ko. Beim Entladen dagegen findet nur der Basisname Verwendung (mod1).
+*/
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Patrick Kohan Tobias Birkle");
 MODULE_DESCRIPTION("Unser erstes Modul");
+
+static int __init ModInit(void)
+{
+        printk(KERN_INFO "module mod1 loaded\n");
+        return 0;
+}
+
+static void __exit ModExit(void)
+{
+        printk(KERN_INFO "Goodbye, cruel world (Pink Floyd / Roger Waters hommage???)\n");
+}
+
+module_init(ModInit);
+module_exit(ModExit);

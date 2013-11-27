@@ -2,74 +2,39 @@
 #define LINUX
 #define __KERNEL__
 
-#include <linux/version.h>
+#include <linux/init.h>
 #include <linux/module.h>
-#include <linux/fs.h>
-#include <asm/uaccess.h>
 
-static int major;
-static struct file_operations fops;
+/*
+###  Modul Template
 
-static int __init hello_setup(void)
-{
-	if((major=register_chrdev(0,"TestDriver",&fops))==0) {
-		return -EIO;
-	}
-	printk("<1>init_module called: %d\n", major);
-	return 0;
-}
+#### Ziele
 
-static void __exit hello_cleanup(void)
-{
-	unregister_chrdev( major, "TestDriver" );
-	printk("<1>cleanup_module called\n");
-}
+  * Erstellen eines Modul-Templates
+  * Verständnis für die Linux-Code-Besonderheiten
 
-static int driver_open( struct inode *device, struct file *instance )
-{
-	return 0;
-}
+#### Durchführung
 
-static int driver_close( struct inode *device, struct file *instance )
-{
-	return 0;
-}
-
-static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
-{
-	int not_copied, to_copy;
-	char* hello_world = "hello world";
-
-	to_copy = strlen(hello_world)+1;
-	to_copy = min( to_copy, count );
-	not_copied = copy_to_user( user, hello_world, to_copy);
-	return to_copy-not_copied;
-}
-
-static ssize_t driver_write( struct file *instanz, const char *user, size_t count, loff_t *offs )
-{
-	int to_copy;
-	int not_copied;
-	char buf[10]; 
-
-	to_copy = min( 10, count);
-	not_copied = copy_from_user( buf, user, to_copy );
-	printk(">%s<", buf );
-	return to_copy-not_copied;
-}
-
-static struct file_operations fops = {
-	.owner = THIS_MODULE,
-	.open = driver_open,
-	.release = driver_close,
-	.read = driver_read,
-	.write = driver_write,
-	/*.poll = driver_poll,*/
-};
-
-module_init( hello_setup );
-module_exit( hello_cleanup );
+  1. Geben Sie das vorgestellte Code-Template ein und legen Sie dieses unter dem Dateinamen template.c ab.
+  2. Modifzieren Sie das Makefile. Ändern Sie den Namen für die zu compilierende Datei von mod1 in template.
+  3. Starten Sie den Generierungsprozess durch Eingabe von **make**.
+  4. Testen Sie Ihr Modul, indem Sie es laden (**insmod**), anzeigen lassen (**lsmod**) und wieder entfernen (**rmmod**). Beobachten Sie die Ausgaben im Syslog.
+*/
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Patrick Kohan Tobias Birkle");
 MODULE_DESCRIPTION("Unser erstes Modul");
+
+static int __init ModInit(void)
+{
+        printk(KERN_INFO "module template loaded\n");
+        return 0;
+}
+
+static void __exit ModExit(void)
+{
+        printk(KERN_INFO "Goodbye, cruel world (Pink Floyd / Roger Waters hommage???)\n");
+}
+
+module_init(ModInit);
+module_exit(ModExit);

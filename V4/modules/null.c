@@ -7,6 +7,35 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
+/*
+### Schreibfunktion (```/dev/null```)
+
+#### Ziele
+
+  * Den schreibende Zugriff auf den Treiber realisieren.
+  * Aufbau und Funktion des virtuellen Geräts »/dev/null« kennen lernen
+
+#### Vorbereitung
+
+Quelldatei erstellen:
+
+  * Erstellen Sie auf Basis des Templates eine Datei namens ```null.c```.
+
+Makefile anpassen:
+
+  * Modifizieren Sie das Makefile. Ändern Sie den Namen für die zu compilierende Datei in ```null```.
+
+#### Durchführung
+
+  1. Erweitern Sie das Codefragment um eine Schreib-Funktion, die alle übergebenen (geschriebenen) Daten »verschluckt«.
+  2. Instrumentieren Sie den Code so, dass Sie geeignete DEBUG Ausgaben erhalten.
+  3. Testen Sie den Treiber mit dem Systemprogramm **echo**.
+  4. Testen Sie den Treiber durch Umlenken der Ausgabe von **cat**:
+
+     $ cat /etc/motd > /dev/mydevice
+     $ tail -f /var/log/kern.log
+*/
+
 static int major;
 static struct file_operations fops;
 
@@ -50,7 +79,7 @@ static ssize_t driver_write( struct file *instanz, const char *user, size_t coun
 {
 	int to_copy;
 	int not_copied;
-	char buf[10]; 
+	char buf[10];
 
 	to_copy = min( 10, count);
 	not_copied = copy_from_user( buf, user, to_copy );
