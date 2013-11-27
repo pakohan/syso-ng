@@ -23,6 +23,10 @@ gdb:
 	@echo "target extended-remote ip:port"
 	/opt/toolchains/Sourcery-CodeBench-ARM-2013.05/bin/arm-none-linux-gnueabi-gdb
 
+module:
+	CROSS_COMPILE=/opt/toolchains/Sourcery-CodeBench-ARM-2013.05/bin/arm-none-linux-gnueabi- make -C /home/pakohan/Desktop/syso-ng/buildroot-2013.08.1/output/build/linux-3.10.7/ M=$(PWD)/module ARCH=arm
+	scp module/module.ko root@192.168.29.166:/lib/modules/3.10.7/kernel/drivers
+
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config
 	make -C ../${BROOT_VERSION} nconfig
