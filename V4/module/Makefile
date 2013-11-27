@@ -1,4 +1,4 @@
-TP_SOURCES=$(wildcard *.c)
+TP_SOURCES=$(wildcard $(PWD)/*.c)
 TP_OBJECTS=$(TP_SOURCES:.c=.o)
 
 ifneq ($(KERNELRELEASE),)
