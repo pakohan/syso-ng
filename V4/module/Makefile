@@ -13,4 +13,4 @@ default:
 endif
 
 clean:
-	rm -rf *.o *.ko *.mod.c *.order *.symvers
+	rm -rf *.o *.ko *.mod.c *.order *.symvers .*
