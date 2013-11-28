@@ -44,17 +44,43 @@
 static int major;
 static struct file_operations fops;
 
-static int __init hello_setup(void)
+static int __init mod_setup(void)
 {
+    dev_t* template_dev_number;
+    cdev* driver_object;
+
+    if( alloc_chrdev_region(&template_dev_number, 0,1,TEMPLATE) <  0 )
+    {
+        printk(KERN_ERR "alloc failed");
+        return -EIO;
+    }
+    
+    driver_object = cdev_alloc();
+    if( driver_object == NULL )
+        goto free_device_number;
+
+    driver_object->owner = THIS_MODULE;
+    driver_object->ops = &fops
+
+    if( cdev_add(driver_object, template_dev_number,1) )
+        goto free_cdev;
+
+    
+
+
+
+    return 0;
+/*
     if((major=register_chrdev(0,"driver.c",&fops))==0) {
         printk(KERN_ERR "loading failed");
         return -EIO;
     }
     printk(KERN_INFO "init_module called, got major number: %d\n", major);
     return 0;
+*/
 }
 
-static void __exit hello_cleanup(void)
+static void __exit mod_cleanup(void)
 {
     unregister_chrdev( major, "driver.c" );
     printk(KERN_INFO "cleanup_module called\n");
@@ -81,8 +107,8 @@ static struct file_operations fops = {
 	.poll = driver_poll,*/
 };
 
-module_init( hello_setup );
-module_exit( hello_cleanup );
+module_init( mod_setup );
+module_exit( mod_cleanup );
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Patrick Kohan Tobias Birkle");
