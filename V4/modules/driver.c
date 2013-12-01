@@ -49,40 +49,38 @@ static int __init mod_setup(void)
     dev_t* template_dev_number;
     cdev* driver_object;
 
-    if( alloc_chrdev_region(&template_dev_number, 0,1,TEMPLATE) <  0 )
+    if((major = alloc_chrdev_region(&template_dev_number, 0,1,TEMPLATE))==0)
     {
-        printk(KERN_ERR "alloc failed");
+        printk(KERN_ERR "alloc failed\n");
         return -EIO;
     }
-    
+
     driver_object = cdev_alloc();
     if( driver_object == NULL )
+    {
+        printk(KERN_ERR "cdev_alloc failed\n");
         goto free_device_number;
+    }
 
     driver_object->owner = THIS_MODULE;
     driver_object->ops = &fops
 
     if( cdev_add(driver_object, template_dev_number,1) )
+    {
+        printk(KERN_ERR "cdev_add failed\n");
         goto free_cdev;
-
-    
-
-
-
-    return 0;
-/*
-    if((major=register_chrdev(0,"driver.c",&fops))==0) {
-        printk(KERN_ERR "loading failed");
-        return -EIO;
     }
-    printk(KERN_INFO "init_module called, got major number: %d\n", major);
+
     return 0;
-*/
+free_cdev:
+    cdev_del(driver_object);
+free_device_number:
+    unregister_chrdev( major, "driver" );
 }
 
 static void __exit mod_cleanup(void)
 {
-    unregister_chrdev( major, "driver.c" );
+    unregister_chrdev( major, "driver" );
     printk(KERN_INFO "cleanup_module called\n");
 }
 
