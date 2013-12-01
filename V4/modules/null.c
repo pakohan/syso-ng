@@ -48,11 +48,11 @@ static struct cdev c_dev;
 
 static int __init mod_setup(void)
 {
-    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) goto error_exit;
+    if (alloc_chrdev_region(&first, 0, 1, "null.c") < 0) goto error_exit;
 
-    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
+    if ((cl = class_create(THIS_MODULE, "chardrv5")) == NULL) goto error_class_create;
 
-    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
+    if (device_create(cl, NULL, first, NULL, "mod_7") == NULL) goto error_device_create;
 
     cdev_init(&c_dev, &fops);
 
@@ -93,13 +93,27 @@ static int driver_close( struct inode *device, struct file *instance )
    return 0;
 }
 
+static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
+{
+    printk(KERN_INFO "give this guy a zero!\n");
+    char* hello_world = "\0";
+    copy_to_user( user, hello_world, 1);
+    return 1;
+}
+
+static ssize_t driver_write( struct file *instance, char *user, size_t count, loff_t *offset )
+{
+    printk(KERN_INFO "ate %d bytes\n", count);
+    return count;
+}
+
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = driver_open,
     .release = driver_close,
-    /*.read = driver_read,
+    .read = driver_read,
     .write = driver_write,
-    .poll = driver_poll,*/
+    /*.poll = driver_poll,*/
 };
 
 module_init( mod_setup );

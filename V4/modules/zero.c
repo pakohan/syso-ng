@@ -48,14 +48,15 @@ static struct file_operations fops;
 static dev_t first;
 static struct class *cl;
 static struct cdev c_dev;
+static atomic_t sem = ATOMIC_INIT(0);
 
 static int __init mod_setup(void)
 {
-    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) goto error_exit;
+    if (alloc_chrdev_region(&first, 0, 1, "zero.c") < 0) goto error_exit;
 
-    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
+    if ((cl = class_create(THIS_MODULE, "chardrv4")) == NULL) goto error_class_create;
 
-    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
+    if (device_create(cl, NULL, first, NULL, "mod_6") == NULL) goto error_device_create;
 
     cdev_init(&c_dev, &fops);
 
@@ -87,21 +88,38 @@ static void __exit mod_cleanup(void)
 static int driver_open( struct inode *device, struct file *instance )
 {
     printk(KERN_INFO "Open file called\n");
+    if (atomic_inc_return(&sem) > 1)
+    {
+        atomic_dec(&sem);
+        printk(KERN_ERR "File is already opened by another process\n");
+        return -1;
+    }
+
+    printk(KERN_INFO "File has been opened\n");
     return 0;
 }
 
 static int driver_close( struct inode *device, struct file *instance )
 {
-     printk(KERN_INFO "Close file called\n");
-   return 0;
+    printk(KERN_INFO "Close file called\n");
+    atomic_dec(&sem);
+    return 0;
+}
+
+static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
+{
+    printk(KERN_INFO "give this guy a zero!\n");
+    char* hello_world = "\0";
+    copy_to_user( user, hello_world, 1);
+    return 1;
 }
 
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = driver_open,
     .release = driver_close,
-    /*.read = driver_read,
-    .write = driver_write,
+    .read = driver_read,
+    /*.write = driver_write,
     .poll = driver_poll,*/
 };
 

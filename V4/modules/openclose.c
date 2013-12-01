@@ -53,15 +53,15 @@ static struct file_operations fops;
 static dev_t first;
 static struct class *cl;
 static struct cdev c_dev;
-static struct sem_t = ATOMIC_INIT(0);
+static atomic_t sem = ATOMIC_INIT(0);
 
 static int __init mod_setup(void)
 {
-    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) goto error_exit;
+    if (alloc_chrdev_region(&first, 0, 1, "openclose.c") < 0) goto error_exit;
 
-    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
+    if ((cl = class_create(THIS_MODULE, "chardrv2")) == NULL) goto error_class_create;
 
-    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
+    if (device_create(cl, NULL, first, NULL, "mod_4") == NULL) goto error_device_create;
 
     cdev_init(&c_dev, &fops);
 
@@ -93,11 +93,11 @@ static void __exit mod_cleanup(void)
 static int driver_open( struct inode *device, struct file *instance )
 {
     printk(KERN_INFO "Open file called\n");
-    if (atomic_add_return(1, &sem) > 1)
+    if (atomic_inc_return(&sem) > 1)
     {
         atomic_dec(&sem);
         printk(KERN_ERR "File is already opened by another process\n");
-        return EMFILE;
+        return -1;
     }
 
     printk(KERN_INFO "File has been opened\n");
@@ -117,10 +117,9 @@ static ssize_t driver_read( struct file *instance, char *user, size_t count, lof
     return count;
 }
 
-static ssize_t driver_write( struct file *instanz, const char *user, size_t count, loff_t *offs )
+static ssize_t driver_write( struct file *instance, const char *user, size_t count, loff_t *offs )
 {
     printk(KERN_INFO "write called\n");
-    if
     return count;
 }
 
@@ -133,8 +132,8 @@ static struct file_operations fops = {
     /*.poll = driver_poll,*/
 };
 
-module_init( hello_setup );
-module_exit( hello_cleanup );
+module_init( mod_setup );
+module_exit( mod_cleanup );
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Patrick Kohan Tobias Birkle");

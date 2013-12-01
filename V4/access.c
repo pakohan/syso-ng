@@ -2,29 +2,34 @@
 #include <unistd.h>
 #include <sys/sysinfo.h>
 #include <stdlib.h>
+#include <errno.h>
 
-TODO TEST device with open, close, read, write
+/*TODO TEST device with open, close, read, write*/
 
-int  main(int arc, char **argv)
+int  main(int argc, char **argv)
 {
-    file_t *files = (file_t*) malloc(atoi(argv[2])*sizeof(file_t*))
+    int i, j = atoi(argv[2]);
+    size_t x;
+    FILE *files[j];
+
+    char buf[100];
 
     if (argc < 3) {
         return -1;
     }
 
-    for (int i = 0; i < atoi(argv[2]); i++) {
-        int err = open(argv[1], file[i]);
-        if (!err) {
+    for (i = 0; i < j; i++) {
+        files[i] = fopen(argv[1], "r+w");
+        if (files[i] != NULL) {
             printf("Opening success\n");
 
-            printf(read(file[i], 10));
+            x = fread(buf, sizeof(buf), 1, files[i]);
+            printf("red %d blocks: %s\n", x, buf);
+            printf("wrote %d bytes\n", fwrite("hello driver", sizeof("hello driver"), sizeof("hello driver"), files[i]));
 
-            sprintf(write(file[i], "hello driver"));
-
-            close(file[i])
+            /*fclose(files[i]);*/
         } else {
-            printf("Opening failed\n");
+            printf("Opening failed: %d\n", errno);
         }
     }
 }
