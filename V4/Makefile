@@ -21,7 +21,7 @@ modules:
 	CROSS_COMPILE=${CROSS_CC} make -C ${LINUX_DIR} M=$(PWD)/modules ARCH=arm
 
 copy-modules:
-	scp modules/*.ko root@192.168.29.166:/lib/modules/${KERNEL_VERSION}/kernel/drivers
+	scp modules/*.ko root@192.168.29.166:/lib/modules/${KERNEL_VERSION}/kernel/
 
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config

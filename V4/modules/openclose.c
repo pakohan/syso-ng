@@ -2,12 +2,6 @@
 #define LINUX
 #define __KERNEL__
 
-#include <linux/version.h>
-#include <linux/module.h>
-#include <linux/fs.h>
-#include <linux/types.h>
-#include <asm/uaccess.h>
-
 /*
 ### open() und close() Funktion
 
@@ -45,35 +39,63 @@ Makefile anpassen:
   8. Erstellen Sie eine eigene Applikation (mit Hilfe der Systemcalls **open**, **close**, **read** und **write**).
   9. Testen Sie den Treiber mit Hilfe der selbst erstellten Applikation (access.c).
 */
+#include <linux/version.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <asm/uaccess.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/kdev_t.h>
 
-static int major;
 static struct file_operations fops;
-static atomic_t sem;
+static dev_t first;
+static struct class *cl;
+static struct cdev c_dev;
+static struct sem_t = ATOMIC_INIT(0);
 
-static int __init hello_setup(void)
+static int __init mod_setup(void)
 {
-    if((major=register_chrdev(0,"driver.c",&fops))==0) {
-        printk(KERN_ERR "loading failed");
-        return -EIO;
-    }
+    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) goto error_exit;
 
-    sem = ATOMIC_INIT(0);
-    printk(KERN_INFO "init_module called, got major number: %d\n", major);
+    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
+
+    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
+
+    cdev_init(&c_dev, &fops);
+
+    if (cdev_add(&c_dev, first, 1) == -1) goto error_cdev_add;
+
+    printk(KERN_INFO "module loaded\n");
     return 0;
+
+error_cdev_add:
+    device_destroy(cl, first);
+error_device_create:
+    class_destroy(cl);
+error_class_create:
+    unregister_chrdev_region(first, 1);
+error_exit:
+    printk(KERN_ERR "module loading failed\n");
+    return -1;
 }
 
-static void __exit hello_cleanup(void)
+static void __exit mod_cleanup(void)
 {
-    unregister_chrdev( major, "driver.c" );
-    printk(KERN_INFO "cleanup_module called\n");
+    cdev_del(&c_dev);
+    device_destroy(cl, first);
+    class_destroy(cl);
+    unregister_chrdev_region(first, 1);
+    printk(KERN_INFO "module removed\n");
 }
 
 static int driver_open( struct inode *device, struct file *instance )
 {
     printk(KERN_INFO "Open file called\n");
-    if (atomic_add_return(1, sem) > 1)
+    if (atomic_add_return(1, &sem) > 1)
     {
-        atomic_dec(sem);
+        atomic_dec(&sem);
         printk(KERN_ERR "File is already opened by another process\n");
         return EMFILE;
     }
@@ -85,17 +107,30 @@ static int driver_open( struct inode *device, struct file *instance )
 static int driver_close( struct inode *device, struct file *instance )
 {
     printk(KERN_INFO "Close file called\n");
-    atomic_dec(sem);
+    atomic_dec(&sem);
     return 0;
+}
+
+static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
+{
+    printk(KERN_INFO "read called\n");
+    return count;
+}
+
+static ssize_t driver_write( struct file *instanz, const char *user, size_t count, loff_t *offs )
+{
+    printk(KERN_INFO "write called\n");
+    if
+    return count;
 }
 
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = driver_open,
     .release = driver_close,
-    /*.read = driver_read,
+    .read = driver_read,
     .write = driver_write,
-    .poll = driver_poll,*/
+    /*.poll = driver_poll,*/
 };
 
 module_init( hello_setup );

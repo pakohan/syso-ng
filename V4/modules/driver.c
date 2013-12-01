@@ -1,14 +1,6 @@
 #define MODULE
 #define LINUX
 #define __KERNEL__
-
-#include <linux/version.h>
-#include <linux/module.h>
-#include <linux/fs.h>
-#include <asm/uaccess.h>
-#include <linux/cdev.h>
-#include <linux/types.h>
-
 /*
 ### Vom Modul zum Treiber
 
@@ -43,47 +35,54 @@
     4. Welche Zugriffsmodi hat die zugehörige Gerätedatei?
 */
 
-static int major;
+#include <linux/version.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <asm/uaccess.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/kdev_t.h>
+
 static struct file_operations fops;
+static dev_t first;
+static struct class *cl;
+static struct cdev c_dev;
 
 static int __init mod_setup(void)
 {
-    dev_t* template_dev_number;
-    struct *cdev driver_object;
+    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) goto error_exit;
 
-    if((major = alloc_chrdev_region(&template_dev_number, 0,1,TEMPLATE))==0)
-    {
-        printk(KERN_ERR "alloc failed\n");
-        return -EIO;
-    }
+    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
 
-    driver_object = cdev_alloc();
-    if( driver_object == NULL )
-    {
-        printk(KERN_ERR "cdev_alloc failed\n");
-        goto free_device_number;
-    }
+    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
 
-    driver_object->owner = THIS_MODULE;
-    driver_object->ops = &fops
+    cdev_init(&c_dev, &fops);
 
-    if( cdev_add(driver_object, template_dev_number,1) )
-    {
-        printk(KERN_ERR "cdev_add failed\n");
-        goto free_cdev;
-    }
+    if (cdev_add(&c_dev, first, 1) == -1) goto error_cdev_add;
 
+    printk(KERN_INFO "module loaded\n");
     return 0;
-free_cdev:
-    cdev_del(driver_object);
-free_device_number:
-    unregister_chrdev( major, "driver" );
+
+error_cdev_add:
+    device_destroy(cl, first);
+error_device_create:
+    class_destroy(cl);
+error_class_create:
+    unregister_chrdev_region(first, 1);
+error_exit:
+    printk(KERN_ERR "module loading failed\n");
+    return -1;
 }
 
 static void __exit mod_cleanup(void)
 {
-    unregister_chrdev( major, "driver" );
-    printk(KERN_INFO "cleanup_module called\n");
+    cdev_del(&c_dev);
+    device_destroy(cl, first);
+    class_destroy(cl);
+    unregister_chrdev_region(first, 1);
+    printk(KERN_INFO "module removed\n");
 }
 
 static int driver_open( struct inode *device, struct file *instance )

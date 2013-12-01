@@ -1,4 +1,4 @@
-TP_SOURCES=driver.c  #hello.c  mod1.c  null.c  openclose.c  template.c  zero.c
+TP_SOURCES=driver.c hello.c  mod1.c  null.c  openclose.c  template.c  zero.c
 TP_OBJECTS=$(TP_SOURCES:.c=.o)
 
 ifneq ($(KERNELRELEASE),)
