@@ -7,6 +7,7 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 #include <linux/cdev.h>
+#include <linux/types.h>
 
 /*
 ### Vom Modul zum Treiber
@@ -48,7 +49,7 @@ static struct file_operations fops;
 static int __init mod_setup(void)
 {
     dev_t* template_dev_number;
-    cdev* driver_object;
+    struct *cdev driver_object;
 
     if((major = alloc_chrdev_region(&template_dev_number, 0,1,TEMPLATE))==0)
     {
