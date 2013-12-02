@@ -93,17 +93,17 @@ static int driver_open( struct inode *device, struct file *instance )
 
 static int driver_close( struct inode *device, struct file *instance )
 {
-     printk(KERN_INFO "Close file called\n");
-   return 0;
+    printk(KERN_INFO "Close file called\n");
+    return 0;
 }
 
 static struct file_operations fops = {
-	.owner = THIS_MODULE,
-	.open = driver_open,
-	.release = driver_close,
-	/*.read = driver_read,
-	.write = driver_write,
-	.poll = driver_poll,*/
+    .owner = THIS_MODULE,
+    .open = driver_open,
+    .release = driver_close,
+    /*.read = driver_read,
+    .write = driver_write,
+    .poll = driver_poll,*/
 };
 
 module_init( mod_setup );

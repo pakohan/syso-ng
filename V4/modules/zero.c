@@ -88,8 +88,7 @@ static void __exit mod_cleanup(void)
 static int driver_open( struct inode *device, struct file *instance )
 {
     printk(KERN_INFO "Open file called\n");
-    if (atomic_inc_return(&sem) > 1)
-    {
+    if (atomic_inc_return(&sem) > 1) {
         atomic_dec(&sem);
         printk(KERN_ERR "File is already opened by another process\n");
         return -1;

@@ -89,8 +89,8 @@ static int driver_open( struct inode *device, struct file *instance )
 
 static int driver_close( struct inode *device, struct file *instance )
 {
-     printk(KERN_INFO "Close file called\n");
-   return 0;
+    printk(KERN_INFO "Close file called\n");
+    return 0;
 }
 
 static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )

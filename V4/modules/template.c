@@ -27,13 +27,13 @@ MODULE_DESCRIPTION("Unser zweites Modul");
 
 static int __init ModInit(void)
 {
-        printk(KERN_INFO "module template loaded\n");
-        return 0;
+    printk(KERN_INFO "module template loaded\n");
+    return 0;
 }
 
 static void __exit ModExit(void)
 {
-        printk(KERN_INFO "Goodbye, cruel world (Pink Floyd / Roger Waters hommage???)\n");
+    printk(KERN_INFO "Goodbye, cruel world (Pink Floyd / Roger Waters hommage???)\n");
 }
 
 module_init(ModInit);
