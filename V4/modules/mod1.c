@@ -42,13 +42,13 @@ MODULE_DESCRIPTION("Unser erstes Modul");
 
 static int __init ModInit(void)
 {
-    printk(KERN_INFO "module mod1 loaded\n");
-    return 0;
+        printk(KERN_INFO "module mod1 loaded\n");
+        return 0;
 }
 
 static void __exit ModExit(void)
 {
-    printk(KERN_INFO "Goodbye, cruel world (Pink Floyd / Roger Waters hommage???)\n");
+        printk(KERN_INFO "Goodbye, cruel world (Pink Floyd / Roger Waters hommage???)\n");
 }
 
 module_init(ModInit);
