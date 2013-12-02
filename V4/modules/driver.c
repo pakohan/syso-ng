@@ -52,16 +52,20 @@ static struct cdev c_dev;
 
 static int __init mod_setup(void)
 {
-    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) goto error_exit;
+    if (alloc_chrdev_region(&first, 0, 1, "driver.c") < 0) 
+        goto error_exit;
+    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL)
+        goto error_class_create;
 
-    if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
-
-    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
+    if (device_create(cl, NULL, first, NULL, "mod_3") == NULL)
+        goto error_device_create;
 
     cdev_init(&c_dev, &fops);
 
-    if (cdev_add(&c_dev, first, 1) == -1) goto error_cdev_add;
+    if (cdev_add(&c_dev, first, 1) == -1)
+        goto error_cdev_add;
 
+    printk(KERN_INFO "Major Number: %d.\n", MAJOR(first));
     printk(KERN_INFO "module loaded\n");
     return 0;
 
