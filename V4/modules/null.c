@@ -43,77 +43,96 @@ Makefile anpassen:
 
 static struct file_operations fops;
 static dev_t first;
-static struct class *cl;
+static struct class *cl1;
 static struct cdev c_dev;
+static atomic_t sem = ATOMIC_INIT(0);
+static int number_devices = 1;
 
 static int __init mod_setup(void)
 {
-        if (alloc_chrdev_region(&first, 0, 1, "null.c") < 0) goto error_exit;
+    int i = 0;
+    if (alloc_chrdev_region(&first, 0, number_devices, "null.c") < 0)
+        goto error_exit;
 
-        if ((cl = class_create(THIS_MODULE, "chardrv5")) == NULL) goto error_class_create;
+    if ((cl1 = class_create(THIS_MODULE, "chardrv5")) == NULL)
+        goto error_class_create;
 
-        if (device_create(cl, NULL, first, NULL, "mod_7") == NULL) goto error_device_create;
+    if (device_create(cl1, NULL, first, NULL, "mod_7") == NULL)
+        goto error_device_create;
 
-        cdev_init(&c_dev, &fops);
+    cdev_init(&c_dev, &fops);
 
-        if (cdev_add(&c_dev, first, 1) == -1) goto error_cdev_add;
+    if (cdev_add(&c_dev, first, number_devices) == -1)
+        goto error_cdev_add;
 
-        printk(KERN_INFO "module loaded\n");
-        return 0;
+    printk(KERN_DEBUG "module loaded\n");
+    return 0;
 
 error_cdev_add:
-        device_destroy(cl, first);
+    device_destroy(cl1, first);
 error_device_create:
-        class_destroy(cl);
+    class_destroy(cl1);
 error_class_create:
-        unregister_chrdev_region(first, 1);
+    unregister_chrdev_region(first, number_devices);
 error_exit:
-        printk(KERN_ERR "module loading failed\n");
-        return -1;
+    printk(KERN_ERR "module loading failed\n");
+    return -1;
 }
 
 static void __exit mod_cleanup(void)
 {
-        cdev_del(&c_dev);
-        device_destroy(cl, first);
-        class_destroy(cl);
-        unregister_chrdev_region(first, 1);
-        printk(KERN_INFO "module removed\n");
+    cdev_del(&c_dev);
+    device_destroy(cl1, first);
+    class_destroy(cl1);
+    unregister_chrdev_region(first, number_devices);
+    printk(KERN_DEBUG "module removed\n");
 }
 
 static int driver_open( struct inode *device, struct file *instance )
 {
-        printk(KERN_INFO "Open file called\n");
-        return 0;
+    printk(KERN_DEBUG "Open file called\n");
+    if (atomic_inc_return(&sem) > 1) {
+            atomic_dec(&sem);
+            printk(KERN_ERR "File is already opened by another process\n");
+            return -1;
+    }
+    printk(KERN_DEBUG "File has been opened\n");
+    return 0;
 }
 
 static int driver_close( struct inode *device, struct file *instance )
 {
-        printk(KERN_INFO "Close file called\n");
-        return 0;
+    printk(KERN_DEBUG "Close file called\n");
+    atomic_dec(&sem);
+    return 0;
 }
 
 static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
 {
-        printk(KERN_INFO "give this guy a zero!\n");
-        char *hello_world = "\0";
-        copy_to_user( user, hello_world, 1);
-        return 1;
+    int minor = iminor( instance->f_dentry->d_inode );
+    char *hello_world = "hello world";
+
+    if ( minor == 0 ) 
+        hello_world = "0";
+
+    copy_to_user( user, hello_world, strlen( hello_world )+1 );
+ 
+    return strlen( hello_world )+1;
 }
 
 static ssize_t driver_write( struct file *instance, char *user, size_t count, loff_t *offset )
 {
-        printk(KERN_INFO "ate %d bytes\n", count);
-        return count;
+    printk(KERN_DEBUG "ate %d bytes\n", count);
+    return count;
 }
 
 static struct file_operations fops = {
-        .owner = THIS_MODULE,
-        .open = driver_open,
-        .release = driver_close,
-        .read = driver_read,
-        .write = driver_write,
-        /*.poll = driver_poll,*/
+    .owner = THIS_MODULE,
+    .open = driver_open,
+    .release = driver_close,
+    .read = driver_read,
+    .write = driver_write,
+    /*.poll = driver_poll,*/
 };
 
 module_init( mod_setup );
