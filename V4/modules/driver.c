@@ -56,7 +56,7 @@ static int __init mod_setup(void)
 
         if ((cl = class_create(THIS_MODULE, "chardrv")) == NULL) goto error_class_create;
 
-        if (device_create(cl, NULL, first, NULL, "mod_3") == NULL) goto error_device_create;
+        if (device_create(cl, NULL, first, NULL, "mod_driver") == NULL) goto error_device_create;
 
         cdev_init(&c_dev, &fops);
 

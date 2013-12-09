@@ -57,7 +57,7 @@ static int __init mod_setup(void)
     if ((cl1 = class_create(THIS_MODULE, "chardrv5")) == NULL)
         goto error_class_create;
 
-    if (device_create(cl1, NULL, first, NULL, "mod_7") == NULL)
+    if (device_create(cl1, NULL, first, NULL, "mod_null") == NULL)
         goto error_device_create;
 
     cdev_init(&c_dev, &fops);
@@ -109,15 +109,7 @@ static int driver_close( struct inode *device, struct file *instance )
 
 static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
 {
-    int minor = iminor( instance->f_dentry->d_inode );
-    char *hello_world = "hello world";
-
-    if ( minor == 0 ) 
-        hello_world = "0";
-
-    copy_to_user( user, hello_world, strlen( hello_world )+1 );
- 
-    return strlen( hello_world )+1;
+       return 0;
 }
 
 static ssize_t driver_write( struct file *instance, char *user, size_t count, loff_t *offset )

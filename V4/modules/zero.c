@@ -64,7 +64,7 @@ static int __init mod_setup(void)
     for(i = 0; i < number_devices; i++)
     {
         if (device_create(cl1, NULL, MKDEV(MAJOR(first), MINOR(first)+i),
-            NULL, "mod_6_%d", i) == NULL)
+            NULL, "mod_zero%d", i) == NULL)
             goto error_device_create;
     }
 
@@ -122,6 +122,7 @@ static int driver_close( struct inode *device, struct file *instance )
 static ssize_t driver_read( struct file *instance, char *user, size_t count, loff_t *offset )
 {
     int minor = iminor( instance->f_dentry->d_inode );
+
     char *hello_world = "hello world";
 
     if ( minor == 0 ) 
