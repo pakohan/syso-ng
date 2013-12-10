@@ -1,0 +1,7 @@
+/lib/modules/3.10.7/kernel/driver.ko:
+/lib/modules/3.10.7/kernel/hello.ko:
+/lib/modules/3.10.7/kernel/mod1.ko:
+/lib/modules/3.10.7/kernel/null.ko:
+/lib/modules/3.10.7/kernel/openclose.ko:
+/lib/modules/3.10.7/kernel/template.ko:
+/lib/modules/3.10.7/kernel/zero.ko:

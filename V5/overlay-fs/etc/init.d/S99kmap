@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# Start mdev....
+#
+
+case "$1" in
+  start)
+	echo "Configuring keyboard layout..."
+	echo "loadkmap < /etc/de.map"
+	loadkmap < /etc/de.map
+	;;
+  stop)
+	;;
+  restart|reload)
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

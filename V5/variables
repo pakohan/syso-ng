@@ -1,0 +1,18 @@
+EXTRA_CFLAGS=
+EXTRA_LDFLAGS=
+BROOT_VERSION=buildroot-2013.08.1
+KERNEL_VERSION=3.10.7
+BBOX_VERSION=busybox-1.21.1
+CROSS_CC=/opt/toolchains/Sourcery-CodeBench-ARM-2013.05/bin/arm-none-linux-gnueabi-
+LINUX_DIR=../${BROOT_VERSION}/output/build/linux-${KERNEL_VERSION}/
+
+QEMU=qemu-system-arm -M versatilepb -net nic,macaddr=00:00:00:00:00:A4 -net vde,sock=/tmp/vde2-tap0.ctl -append "root=/dev/ram init=/init console=tty1 debug user_debug=­1" -qmp tcp:localhost:25565,server,nowait -k /usr/share/qemu/keymaps/de
+DEBUG=-gdb tcp::25566 -S
+
+USERPROG=../${BROOT_VERSION}/output/linux-${KERNEL_VERSION}/usr/initramfs/bin/hello
+ROOTFS=../${BROOT_VERSION}/output/linux-${KERNEL_VERSION}/usr/initramfs
+LINUX_CONFIG=../${BROOT_VERSION}/output/build/linux-${KERNEL_VERSION}/.config
+BUSYBOX_CONFIG=../${BROOT_VERSION}/output/build/${BBOX_VERSION}/.config
+BROOT_CONFIG=../${BROOT_VERSION}/.config
+
+TARGET=../buildroot-2013.08.1/output/images/zImage

@@ -28,8 +28,8 @@ access: access.c
 	${CROSS_CC}gcc -s -static ${EXTRA_CFLAGS} access.c -o $@
 
 copy-modules:
-	scp modules/*.ko root@192.168.29.167:/lib/modules/${KERNEL_VERSION}/kernel/
-	#scp modules/*.ko root@192.168.29.167:/root
+	#scp modules/*.ko root@192.168.29.167:/lib/modules/${KERNEL_VERSION}/kernel/
+	scp modules/*.ko root@192.168.29.167:/root
 	scp access root@192.168.29.167:/root
 	@echo "insmod /root/"
 	ssh root@192.168.29.167

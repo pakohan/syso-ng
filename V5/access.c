@@ -46,8 +46,13 @@ int test(char* path, char* mode)
     retVal = fwrite("hello driver", sizeof("hello driver"), sizeof("hello driver"), file);
     printf("Wrote %d bytes\n", retVal);
 
-
-    fclose(file);
+    retVal = 0;
+    retVal = fclose(file);
+    if( retVal == EOF )
+    {   
+        printf("Close failed - %s\n", strerror(errno));
+        return errno;
+    }
 
     printf("Closed\n");
     printf("Finished test for device %s with mode %s.\n\n", path, mode);
