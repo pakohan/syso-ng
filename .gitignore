@@ -15,7 +15,9 @@ busybox-*
 buildroot-*
 V1/initramfsconfig
 *.cmd
-
+V4/access
+V4/modules/.tmp_versions/
+V4/modules/Module.symvers
 server.host
 
 *.o
