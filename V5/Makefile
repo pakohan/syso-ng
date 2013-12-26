@@ -30,9 +30,9 @@ access: access.c
 copy-modules:
 	#scp modules/*.ko root@192.168.29.167:/lib/modules/${KERNEL_VERSION}/kernel/
 	scp modules/*.ko root@192.168.29.167:/root
-	scp access root@192.168.29.167:/root
-	@echo "insmod /root/"
-	ssh root@192.168.29.167
+	#scp access root@192.168.29.167:/root
+	#@echo "insmod /root/"
+	#ssh root@192.168.29.167
 
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config

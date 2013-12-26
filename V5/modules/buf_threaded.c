@@ -199,7 +199,7 @@ static ssize_t driver_write(struct file *instance, const char __user *buff, size
         to_write = (to_write - max) + not_written;
         write_ptr = write_ptr % SIZE;
     }
-	wake_up_interruptible(&read_wq);
+    wake_up_interruptible(&read_wq);
 
     return count;
 }
