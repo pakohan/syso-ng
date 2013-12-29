@@ -17,8 +17,9 @@ static struct file_operations fops;
 static struct class *cl1;
 static dev_t first;
 static struct cdev c_dev;
-static spinlock_t lock = SPIN_LOCK_UNLOCKED;
-static unsigned long flags;
+
+static struct arch_spinlock_t lock;
+/*static unsigned long flags;*/
 
 static int __init mod_setup(void)
 {
@@ -36,6 +37,7 @@ static int __init mod_setup(void)
     if (cdev_add(&c_dev, first, 1) == -1)
         goto error_cdev_add;
 
+    arch_spin_lock(&lock);
     printk(KERN_INFO "module loaded\nTODO: SPINLOCKS?!");
     return 0;
 
@@ -62,14 +64,15 @@ static void __exit mod_cleanup(void)
 static int driver_open( struct inode *device, struct file *instance )
 {
     printk(KERN_INFO "Open file called\n");
-    while ( down_trylock(&sem) ) {
-        printk(KERN_INFO "sleeping...\n");
-        msleep( 200 );
-    }
+    arch_spin_lock( &lock );
+    /*
+    printk(KERN_INFO "sleeping...\n");
+    msleep( 200 );
+    */
 
     printk(KERN_INFO "got it...\n");
     msleep( 3000 );
-    up( &sem );
+    arch_spin_unlock( &lock );
 
     return 0;
 }

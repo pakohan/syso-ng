@@ -15,20 +15,22 @@
 
 static struct timer_list mytimer;
 static unsigned int start = 0;
+static unsigned long last_call = 0;
 
 static void timer_func( unsigned long data )
 {
     unsigned int end = 0;
     end = get_cycles();
 
-    printk(KERN_INFO "timer called at %ld; cycles since last call: %u\n", mytimer.expires, end-start);
+    printk(KERN_INFO "timer called at %ld (%ld); cycles since last call: %u\n", mytimer.expires, mytimer.expires-last_call, end-start);
+    last_call = mytimer.expires;
     start = get_cycles();
     mod_timer(&mytimer, jiffies + (2*HZ));
 }
 
 static int __init mod_setup(void)
 {
-    printk(KERN_INFO "init module called\nTODO: rdtscl only exists for x86, get_cycles() returns alway 0 on arm!\n");
+    printk(KERN_INFO "init module called\n");
     init_timer( &mytimer );
     mytimer.function = timer_func;
     mytimer.data = 0;

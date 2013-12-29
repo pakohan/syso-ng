@@ -36,7 +36,7 @@ static int __init mod_setup(void)
         goto error_cdev_add;
 
     sema_init( &sem, 1 );
-    printk(KERN_INFO "module loaded\nTODO: SPINLOCKS?!\n");
+    printk(KERN_INFO "module loaded\n");
     return 0;
 
 error_cdev_add:

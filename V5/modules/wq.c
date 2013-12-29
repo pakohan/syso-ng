@@ -15,7 +15,6 @@ static struct workqueue_struct *wq;
 static void work_queue_func( void *data )
 {
     printk(KERN_INFO "work queue func called\n" );
-    wq = NULL;
 }
 
 static DECLARE_WORK( work_obj, work_queue_func );

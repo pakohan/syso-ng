@@ -30,7 +30,7 @@ static int thread_code( void *data )
             break;
         }
     }
-    complete_and_exit (&on_exit, 0 );
+    complete_and_exit(&on_exit, 0 );
 }
 
 static int __init mod_setup(void)
