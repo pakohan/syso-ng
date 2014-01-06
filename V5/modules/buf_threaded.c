@@ -296,7 +296,7 @@ static ssize_t driver_write(struct file *instance, const char __user *buff, size
 
     wake_up_process( thread_id );
 
-    wait_for_completion( &(p->work) );
+    /*wait_for_completion( &(p->work) );*/
     wake_up_interruptible(&read_wq);
 
     return count;
