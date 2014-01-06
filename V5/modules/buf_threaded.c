@@ -289,7 +289,7 @@ static ssize_t driver_write(struct file *instance, const char __user *buff, size
 
     p->count = count-copy_from_user(p->buff, buff, count);
 
-    thread_id = kthread_create(write, p, "reader");
+    thread_id = kthread_create(write, p, "writer");
     if ( thread_id==0 || p == NULL || (p->buff) == NULL)
     {
         kfree(p->buff);
