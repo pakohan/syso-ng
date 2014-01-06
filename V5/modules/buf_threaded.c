@@ -191,9 +191,9 @@ static int write( param_t *data )
     while (to_write > 0 ) {
         wait_event_interruptible(write_wq, get_max_size(to_write, write_ptr, read_ptr, WRITE_BUF_SIZE, 1) > 0 || to_write == 0);
         max = get_max_size(to_write, write_ptr, read_ptr, WRITE_BUF_SIZE, 1);
-        not_written = copy_from_user(&buf[write_ptr], &(data->buff[data->count - to_write]), max);
-        write_ptr += (max - not_written);
-        to_write = (to_write - max) + not_written;
+        memcpy(&buf[write_ptr], &(data->buff[data->count - to_write]), max);
+        write_ptr += max
+        to_write = (to_write - max);
         write_ptr = write_ptr % size;
     }
 
