@@ -192,7 +192,7 @@ static int write( param_t *data )
         wait_event_interruptible(write_wq, get_max_size(to_write, write_ptr, read_ptr, WRITE_BUF_SIZE, 1) > 0 || to_write == 0);
         max = get_max_size(to_write, write_ptr, read_ptr, WRITE_BUF_SIZE, 1);
         memcpy(&buf[write_ptr], &(data->buff[data->count - to_write]), max);
-        write_ptr += max
+        write_ptr += max;
         to_write = (to_write - max);
         write_ptr = write_ptr % size;
     }
