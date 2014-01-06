@@ -24,7 +24,7 @@ int test(char* path, int mode)
 {
     int retVal = 0;
     int file;
-    char buf[10];
+    char buf[6];
 
     printf("Started test for device %s\n", path);
 
@@ -38,6 +38,9 @@ int test(char* path, int mode)
 
     retVal = 0;
     retVal = read(file, buf, 5);
+
+    buf[5] = '\0';
+
     printf("Read %d blocks: %s\n", retVal, buf);
 
     retVal = 0;

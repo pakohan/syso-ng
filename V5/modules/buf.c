@@ -146,6 +146,7 @@ static ssize_t driver_read(struct file *instance, char __user *buff, size_t coun
     size_t to_read = count;
     int max = 0;
     int not_red = 0;
+    int before = read_ptr;
     if ( !(instance->f_flags & O_RDONLY) == O_RDONLY ) {
         printk(KERN_ERR "read called from wrong instance!\n");
         return -1;
@@ -162,12 +163,15 @@ static ssize_t driver_read(struct file *instance, char __user *buff, size_t coun
     while (to_read > 0 ) {
         wait_event_interruptible(read_wq, get_max_size(to_read, read_ptr, write_ptr, READ_BUF_SIZE, 0) > 0 || to_read == 0);
         max = get_max_size(to_read, read_ptr, write_ptr, READ_BUF_SIZE, 0);
-        not_red = copy_to_user(buff, &buffer[read_ptr], max);
+        not_red = copy_to_user(&(buff)[count - to_read], &buffer[read_ptr], max);
+        printk(KERN_INFO "max: %d, not_red: %d\n", max, not_red);
         read_ptr += (max - not_red);
         to_read = (to_read - max) + not_red;
         read_ptr = read_ptr % SIZE;
     }
     wake_up_interruptible(&write_wq);
+
+    printk(KERN_INFO "read_ptr before: %d / after: %d\n", before, read_ptr);
 
     return count;
 }
@@ -194,7 +198,7 @@ static ssize_t driver_write(struct file *instance, const char __user *buff, size
     while (to_write > 0 ) {
         wait_event_interruptible(write_wq, get_max_size(to_write, write_ptr, read_ptr, WRITE_BUF_SIZE, 1) > 0 || to_write == 0);
         max = get_max_size(to_write, write_ptr, read_ptr, WRITE_BUF_SIZE, 1);
-        not_written = copy_from_user(&buffer[write_ptr], buff, max);
+        not_written = copy_from_user(&buffer[write_ptr], &(buff[count - to_write]), max);
         write_ptr += (max - not_written);
         to_write = (to_write - max) + not_written;
         write_ptr = write_ptr % SIZE;

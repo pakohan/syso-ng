@@ -22,7 +22,7 @@ static int thread_code( void *data )
     allow_signal( SIGTERM );
     /*for (i=0; i<5 && (kthread_should_stop()==0); i++ ) {*/
     for ( i=0;;i++ ) {
-        timeout=HZ;
+        timeout=2*HZ;
         timeout=wait_event_interruptible_timeout( wq, (timeout==0), timeout );
         printk("thread_function: woke up ... %ld\n", timeout);
         if( timeout==-ERESTARTSYS ) {

@@ -10,8 +10,6 @@
 #include <linux/module.h>
 #include <linux/interrupt.h>
 
-/*static struct tasklet_struct *tldescr;*/
-
 static void tasklet_func( unsigned long data )
 {
     printk(KERN_INFO "tasklet called\n");
