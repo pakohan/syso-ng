@@ -97,8 +97,8 @@ error_exit:
 
 static void __exit mod_cleanup(void)
 {
-    kfree(buf);
     int i = 0;
+    kfree(buf);
     cdev_del(&c_dev);
     for (i = 0; i < NUMBER_DEVICES; i++) {
         device_destroy(cl1, MKDEV(MAJOR(first), MINOR(first) + i));
