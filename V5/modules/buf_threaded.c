@@ -196,6 +196,9 @@ static int write( param_t *data )
         to_write = (to_write - max);
         write_ptr = write_ptr % size;
     }
+    
+    kfree(p->buff);
+    kfree(p);
 
     complete_and_exit(&(data->work), 0 );
 }
