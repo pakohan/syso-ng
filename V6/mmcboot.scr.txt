@@ -1,0 +1,3 @@
+usb start
+dhcp
+bootm

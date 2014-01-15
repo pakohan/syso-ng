@@ -692,6 +692,7 @@ endmenu
 endmenu
 
 menu "Miscellaneous"
+source "package/progs/Config.in"
 source "package/userprog/Config.in"
 source "package/aespipe/Config.in"
 source "package/collectd/Config.in"

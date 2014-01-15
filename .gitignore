@@ -20,6 +20,8 @@ V4/modules/.tmp_versions/
 V4/modules/Module.symvers
 server.host
 
+*.exe
+
 *.o
 *.o.*
 *.a

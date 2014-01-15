@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PROGS
+        bool "progs"
+        help
+          This aren't the droids you're looking for.
+
+          http://www.google.com/

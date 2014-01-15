@@ -1,14 +1,18 @@
 -include variables
 -include ../server.host
 
-.PHONY: all clean start debug ${TARGET} modules qemu-start
+TARGETS=$(wildcard *.c)
+TARGETS_BIN=$(TARGETS:.c=.exe)
+
+.PHONY: all clean start debug ${TARGET} modules qemu-start packages progs
 
 .NOTPARALLEL:
 
 all: ${TARGET}
+	cp ${TARGET} /srv/tftp/rpi/uImage-4
 
 start: ${TARGET}
-	${QEMU} -kernel ${TARGET}
+	cp ${TARGET} /srv/tftp/rpi/uImage-4
 
 qemu-start:
 	${QEMU} -kernel ${TARGET}
@@ -18,31 +22,40 @@ debug: ${TARGET}
 	@echo "/home/pakohan/Desktop/syso-ng/buildroot-2013.08.1/output/build/linux-3.10.7/vmlinux"
 
 gdb:
-	@echo "target extended-remote ip:port"
 	${CROSS_CC}gdb
 
-modules: access
+modules:
 	CROSS_COMPILE=${CROSS_CC} make -C ${LINUX_DIR} M=$(PWD)/modules ARCH=arm
 
-access: access.c
-	${CROSS_CC}gcc -s -static ${EXTRA_CFLAGS} access.c -o $@
+%.exe: %.c
+	${CROSS_CC}gcc -s  ${EXTRA_CFLAGS} -lpthread -lrt $^ -o $@
+
+progs: $(TARGETS_BIN)
+
+progs-clean:
+	rm $(TARGETS_BIN)
 
 copy-modules:
-	#scp modules/*.ko root@192.168.29.167:/lib/modules/${KERNEL_VERSION}/kernel/
-	scp modules/*.ko root@192.168.29.167:/root
-	scp access root@192.168.29.167:/root
-	#@echo "insmod /root/"
-	#ssh root@192.168.29.167
+	scp modules/*.ko root@141.37.31.24:/root/.
+
+copy-progs:
+	scp $(TARGETS_BIN) root@141.37.31.24:/root/.
+
+packages:
+	cp Config.in ../${BROOT_VERSION}/package/
+	cp -R dl ../${BROOT_VERSION}/
+	cp -R packages/progs/ ../${BROOT_VERSION}/package/
+
 
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config
-	make -C ../${BROOT_VERSION} nconfig
+	make -C ../${BROOT_VERSION} menuconfig
 	cp ../${BROOT_VERSION}/.config config-buildroot
 
 linux-config:
 	cp config-linux ../${BROOT_VERSION}/output/build/linux-${KERNEL_VERSION}/.config
 	make -C ../${BROOT_VERSION} linux-nconfig
-	cp ../${BROOT_VERSION}/output/build/linux-${KERNEL_VERSION}/.config ../${BROOT_VERSION}/board/qemu/arm-versatile/linux-${KERNEL_VERSION}.config
+	cp ../${BROOT_VERSION}/output/build/linux-${KERNEL_VERSION}/.config ../${BROOT_VERSION}/board/raspberrypi/config
 	cp ../${BROOT_VERSION}/output/build/linux-${KERNEL_VERSION}/.config config-linux
 
 busybox-config:
@@ -77,6 +90,7 @@ clean:
 	mkdir -p ../${BROOT_VERSION}/output/build/${BBOX_VERSION}/
 	cp Config.in ../${BROOT_VERSION}/package/
 	cp -R userprog ../${BROOT_VERSION}/package/
+	cp config-linux ../buildroot-2013.08.1/board/raspberrypi/config
 
 modules-clean:
 	make -C modules clean
