@@ -4,16 +4,10 @@ PIN=$1
 echo "${PIN}" > /sys/class/gpio/export
 echo "out" > /sys/class/gpio/gpio${PIN}/direction
 
-trap "echo \"xy\" > /sys/class/gpio/unexport" EXIT
+trap "echo '18' > /sys/class/gpio/unexport" SIGINT SIGTERM
 
-while true
+while [ -e /sys/class/gpio/gpio18 ]
 do
     echo "0" > /sys/class/gpio/gpio${PIN}/value
-    sleep 1
     echo "1" > /sys/class/gpio/gpio${PIN}/value
-    sleep 1
 done
-
-
-
-

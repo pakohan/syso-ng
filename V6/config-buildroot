@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Buildroot 2013.08.1-gd484c94-dirty Configuration
+# Buildroot 2013.08.1-g33d2697-dirty Configuration
 #
 BR2_HAVE_DOT_CONFIG=y
 # BR2_arcle is not set
@@ -1037,8 +1037,7 @@ BR2_PACKAGE_PCRE_32=y
 # Miscellaneous
 #
 BR2_PACKAGE_PROGS=y
-BR2_PACKAGE_USERPROG=y
-# BR2_PACKAGE_USERPROG_STATIC is not set
+# BR2_PACKAGE_USERPROG is not set
 # BR2_PACKAGE_AESPIPE is not set
 # BR2_PACKAGE_COLLECTD is not set
 # BR2_PACKAGE_EMPTY is not set

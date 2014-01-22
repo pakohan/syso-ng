@@ -49,9 +49,9 @@ int  main()
     {
         read(device, value, 2);
         
-        int val2 = atoi(value);
+        int val = atoi(value);
                 
-        if(val2 == 1)
+        if(val == 1)
         {
 			if (button_state == 0)
 			{
@@ -86,7 +86,7 @@ void *blink_worker(void *arg)
 {
 	struct timespec times;
 	times.tv_sec = 0;
-	times.tv_nsec = 4000000;
+	times.tv_nsec = 2000000;
 	
 	int led = (int) arg;
 	

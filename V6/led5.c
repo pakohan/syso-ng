@@ -21,12 +21,14 @@ void signal_handler(int value);
 void turn_on(int fpointer);
 void turn_off(int fpointer);
 
+static int button_state = 0;
 
 int  main()
 {
     pthread_t blinker;
     struct sigaction new_action;
-    
+    int device;
+
     int button;
     int led;
     
@@ -57,7 +59,7 @@ int  main()
 	}
 
 	write(direction25, "in", 2);
-	
+	close(direction25);
 	
 	
     if (pthread_create(&blinker, NULL, &blink_worker, NULL) != 0)
@@ -66,34 +68,43 @@ int  main()
         return 1;
     }
     
-    int val;
-    char value[1];
 
-    int last_signal = 0;
+
+    int val;
+    char value[2];
+
     while(1)
     {
-        val = open(BUTTON "value", O_RDONLY);
-        if (val < 0)
+    	device = open(BUTTON "value", O_RDONLY);
+		if (device < 0)
+		{
+			fprintf(stderr, "could not open '%s'\n", BUTTON "value");
+		}
+		read(device, value, 2);
+		close(device);
+        
+        val = atoi(value);
+                
+        if(val == 0)
         {
-	        fprintf(stderr, "could not open '%s'\n", BUTTON "value");
+			if (button_state == 0)
+			{
+				button_state = 1;
+				printf("button down\n");
+			}
         }
-        read(val, value, 1);
-        
-        if(atoi(value) == 0)
+        else
         {
-            if(our_signal != 1)
-            {
-                our_signal = 1;
-            }
-            else
-            {
-                our_signal = 0;
-            }
-        }
-        
-        
+			if (button_state == 1)
+			{
+				button_state = 0;
+				our_signal = !our_signal;
+				printf("button up\n");
+			}
+		}
+
         sched_yield();
-        usleep(200000);
+        usleep(20000);
     }
     
     
@@ -101,7 +112,6 @@ int  main()
     
     
 
-	close(direction25);
       
     return 0;
 }
@@ -110,7 +120,7 @@ void *blink_worker(void *arg)
 {
 	struct timespec times;
 	times.tv_sec = 0;
-	times.tv_nsec = 200000000;
+	times.tv_nsec = 100000000;
 	
 	int led = open(LED "direction", O_WRONLY);
 	if (led < 0)
@@ -173,10 +183,10 @@ void signal_handler(int value)
 		fprintf(stderr, "could not open '%s'\n", EXPORT);
 	}
 	
-	
-	
 	write(unexport, "18", 2);
 	write(unexport, "25", 2);
+	
+	close(unexport);
 	
     _exit(value);
 }

@@ -105,6 +105,7 @@ static void set_pin( int pin_nr, int dir )
     }
     
     ptr = (u32*) (START_REGISTER + ((pin_nr / 10) * 0x4));
+    /*atomarer bereich ... bei verschiedenen pins*/
     old_value = readl( ptr );
     old_value2 = old_value;
     rmb();
@@ -113,6 +114,7 @@ static void set_pin( int pin_nr, int dir )
     wmb();
 	old_value |= dir << (pos*3);
     writel( old_value, ptr );
+    /*... bis hier*/
 }
 
 static void write_pin( int pin_nr, u32 start_reg, int val2 )
@@ -154,7 +156,7 @@ static u32 read_pin( int pin_nr, u32 start_reg )
 }
 
 static int driver_open( struct inode *device, struct file *instance )
-{
+{ /* exklusiver zugriff hier */
 	set_pin( LED, OUTPUT );
 	set_pin( SWITCH, INPUT );
     return 0;
@@ -172,16 +174,13 @@ static ssize_t driver_read(struct file *instance, char __user *buff, size_t coun
     u32 value;
     
     value = read_pin( SWITCH, LEV_REGISTER );
-	printk( KERN_INFO "%d\n", value );
 		
     if(value == 0)
     {
-		printk(KERN_INFO "IN LEV: 1\n");
 		not_copied = copy_to_user( buff, "1", to_copy);
 	}
 	else
 	{
-		printk(KERN_INFO "IN LEV: 0\n");
 		not_copied = copy_to_user( buff, "0", to_copy);
 	}
 	

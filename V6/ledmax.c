@@ -13,7 +13,7 @@
 void turn_on(int fpointer);
 void turn_off(int fpointer);
 
-#define NUMBER 1000000
+#define NUMBER 10
 
 double timevaldiff(struct timeval *starttime, struct timeval *finishtime)
 {

@@ -49,7 +49,7 @@ packages:
 
 buildroot-config:
 	cp config-buildroot ../${BROOT_VERSION}/.config
-	make -C ../${BROOT_VERSION} menuconfig
+	make -C ../${BROOT_VERSION} nconfig
 	cp ../${BROOT_VERSION}/.config config-buildroot
 
 linux-config:
@@ -67,7 +67,9 @@ busybox-config:
 
 ${TARGET}: ${LINUX_CONFIG} ${BUSYBOX_CONFIG} ${BROOT_CONFIG}
 	rm -f ../${BROOT_VERSION}/output/target/usr/bin/userprog
+	rm -f ../${BROOT_VERSION}/output/target/root/*
 	rm -rf ../${BROOT_VERSION}/output/build/userprog-1.0/
+	rm -rf ../${BROOT_VERSION}/output/build/progs-1.0/
 	rm -f ../${BROOT_VERSION}/output/images/zImage
 	make -C ../${BROOT_VERSION} -j ${JOBS}
 

@@ -48,7 +48,8 @@ int  main()
     
     int val;
     char value[2];
-
+	
+	printf("frequency of %.0lfHz\n", 1/((times.tv_nsec*2)/1000000000.0));
     while(1)
     {
         read(device, value, 2);
@@ -69,7 +70,7 @@ int  main()
 			{
 				button_state = 0;
 				times.tv_nsec = times.tv_nsec <= 1000000 ? 100000000 : times.tv_nsec / 2;
-				printf("button up\n");
+				printf("button up\nfrequency of %.0lfHz\n", 1/((times.tv_nsec*2)/1000000000.0));
 			}
 		}
         
