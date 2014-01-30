@@ -201,7 +201,7 @@ static void __exit mod_cleanup(void)
  DEFINE_SEMAPHORE( sem );
  
  // In init_module
- sema_init( &sem, 1 );
+sema_init( &sem, 1 );
  
 static int driver_open( struct inode *device, struct file *instance )
 {
@@ -218,4 +218,28 @@ static int driver_open( struct inode *device, struct file *instance )
     return 0;
 }
  
+ /*
+ * Spinlock
+ */
  
+static struct arch_spinlock_t lock;
+static spinlock_t my_lock;
+ // In init_module
+spin_lock_init( &my_lock );
+
+static int driver_open( struct inode *device, struct file *instance )
+{
+    printk(KERN_INFO "Open file called\n");
+    while (!spin_trylock( &lock ))
+    {
+        printk(KERN_INFO "sleeping...\n");
+        msleep( 200 );
+    }
+
+    printk(KERN_INFO "got it...\n");
+    msleep( 3000 );
+    arch_spin_unlock( &lock );
+
+    return 0;
+}
+
