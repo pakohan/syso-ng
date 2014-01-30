@@ -61,7 +61,23 @@ error_exit:
 /*
  * Tasklet
  */
+static void tasklet_func( unsigned long data )
+{
+    printk(KERN_INFO "tasklet called\n");
+}
+//               Name,    Funktion,    Übergabewert
+DECLARE_TASKLET( tldescr, tasklet_func, 0L );
 
+static int __init mod_setup(void)
+{
+    tasklet_schedule( &tldescr );
+    return 0;
+}
+
+static void __exit mod_cleanup(void)
+{
+    tasklet_kill( &tldescr );
+}
 /*
  * Timer
  */
