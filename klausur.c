@@ -43,7 +43,7 @@ int atomic_add_negative(int i, atomic_t *v);
 
 void set_bit(int nr, volatile unsigned long * addr);
 void clear_bit(int nr, volatile unsigned long * addr);
-void change_bit(int nr, volatile unsigned long * addr
+void change_bit(int nr, volatile unsigned long * addr);
 int test_and_set_bit(int nr, volatile unsigned long * addr);
 int test_and_clear_bit(int nr, volatile unsigned long * addr);
 int test_and_change_bit(int nr, volatile unsigned long* addr);
