@@ -311,6 +311,23 @@ static void __exit mod_cleanup(void)
  /*
  * Semaphore
  */
+ 
+// normal
+DEFINE_SEMAPHORE()
+void sema_init(struct semaphore *sem, int val);
+void down(struct semaphore *sem);
+void up(struct semaphore *sem);
+int down_trylock(struct semaphore *sem);
+
+// read / write
+down_read()
+down_read_trylock()
+down_write()
+down_write_trylock()
+downgrade_write()
+up_read()
+up_write()
+
  DEFINE_SEMAPHORE( sem );
  
  // In init_module
