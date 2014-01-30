@@ -24,9 +24,55 @@ static struct file_operations fops = {
 };
 
 MODULE_LICENSE("GPL");
-
 ////////////////////////////////////////////////////////////////////////////////
+static dev_t first;
+static struct class *cl1;
+static struct cdev c_dev;
 
+// Geraet anmelden:
+static int __init mod_setup(void){
+    if (alloc_chrdev_region(&first, 0, NUMBER_DEVICES, "buf.c") < 0)
+        goto error_exit;
+
+    if ((cl1 = class_create(THIS_MODULE, "chardrv_buf")) == NULL)
+        goto error_class_create;
+
+    for (i = 0; i < NUMBER_DEVICES; i++) {
+        if (device_create(cl1, NULL, MKDEV(MAJOR(first), MINOR(first) + i),
+                          NULL, "mod_buf%d", i) == NULL)
+            goto error_device_create;
+    }
+
+    cdev_init(&c_dev, &fops);
+
+    if (cdev_add(&c_dev, first, NUMBER_DEVICES) == -1)
+        goto error_cdev_add;
+
+    return 0;
+
+error_cdev_add:
+    device_destroy(cl1, first);
+error_device_create:
+    class_destroy(cl1);
+error_class_create:
+    unregister_chrdev_region(first, NUMBER_DEVICES);
+error_exit:
+    printk(KERN_ERR "module loading failed\n");
+    return -1;
+
+// Geraet abmelden:
+static void __exit mod_cleanup(void)
+{
+    int i = 0;
+    cdev_del(&c_dev);
+    for (i = 0; i < NUMBER_DEVICES; i++) {
+        device_destroy(cl1, MKDEV(MAJOR(first), MINOR(first) + i));
+    }
+    class_destroy(cl1);
+    unregister_chrdev_region(first, NUMBER_DEVICES);
+    printk(KERN_INFO "module removed\n");
+}
+////////////////////////////////////////////////////////////////////////////////
 /*
  * Atomic
  */
@@ -102,54 +148,6 @@ while (to_read > 0 ) {
         wait_event_interruptible(read_wq, bedingung == 1)
 }
 wake_up_interruptible(&write_wq);
-////////////////////////////////////////////////////////////////////////////////
-static dev_t first;
-static struct class *cl1;
-static struct cdev c_dev;
-
-// Geraet anmelden:
-static int __init mod_setup(void){
-    if (alloc_chrdev_region(&first, 0, NUMBER_DEVICES, "buf.c") < 0)
-        goto error_exit;
-
-    if ((cl1 = class_create(THIS_MODULE, "chardrv_buf")) == NULL)
-        goto error_class_create;
-
-    for (i = 0; i < NUMBER_DEVICES; i++) {
-        if (device_create(cl1, NULL, MKDEV(MAJOR(first), MINOR(first) + i),
-                          NULL, "mod_buf%d", i) == NULL)
-            goto error_device_create;
-    }
-
-    cdev_init(&c_dev, &fops);
-
-    if (cdev_add(&c_dev, first, NUMBER_DEVICES) == -1)
-        goto error_cdev_add;
-
-    return 0;
-
-error_cdev_add:
-    device_destroy(cl1, first);
-error_device_create:
-    class_destroy(cl1);
-error_class_create:
-    unregister_chrdev_region(first, NUMBER_DEVICES);
-error_exit:
-    printk(KERN_ERR "module loading failed\n");
-    return -1;
-
-// Geraet abmelden:
-static void __exit mod_cleanup(void)
-{
-    int i = 0;
-    cdev_del(&c_dev);
-    for (i = 0; i < NUMBER_DEVICES; i++) {
-        device_destroy(cl1, MKDEV(MAJOR(first), MINOR(first) + i));
-    }
-    class_destroy(cl1);
-    unregister_chrdev_region(first, NUMBER_DEVICES);
-    printk(KERN_INFO "module removed\n");
-}
 ////////////////////////////////////////////////////////////////////////////////
 /*
  * Tasklet
