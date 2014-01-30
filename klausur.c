@@ -117,11 +117,79 @@ static void __exit mod_cleanup(void)
 /*
  * Kernel Thread
  */
+static struct task_struct *thread_id;
+static wait_queue_head_t wq;
+static DECLARE_COMPLETION( on_exit );
 
+static int thread_code( void *data )
+{
+    unsigned long timeout;
+    int i;
+
+    allow_signal( SIGTERM );
+    /*for (i=0; i<5 && (kthread_should_stop()==0); i++ ) {*/
+    for ( i=0;;i++ ) {
+        timeout=2*HZ;
+        timeout=wait_event_interruptible_timeout( wq, (timeout==0), timeout );
+        printk("thread_function: woke up ... %ld\n", timeout);
+        if( timeout==-ERESTARTSYS ) {
+            printk("got signal, break\n");
+            break;
+        }
+    }
+    complete_and_exit(&on_exit, 0 );
+}
+
+static int __init mod_setup(void)
+{
+    printk(KERN_INFO "init module called\n");
+    init_waitqueue_head(&wq);
+    thread_id=kthread_create(thread_code,NULL,"mykthread");
+    if ( thread_id==0 )
+        return -EIO;
+    wake_up_process( thread_id );
+    return 0;
+}
+
+static void __exit mod_cleanup(void)
+{
+    printk(KERN_INFO "exit module called\n");
+    kill_pid( task_pid(thread_id), SIGTERM, 1 );
+    wait_for_completion( &on_exit );
+}
 /*
  * Workqueue
  */
+static struct workqueue_struct *wq;
+static void work_queue_func( struct work_struct *work );
+static DECLARE_DELAYED_WORK( work_obj, work_queue_func );
 
+static void work_queue_func( struct work_struct *work )
+{
+    printk(KERN_INFO "work queue func called\n" );
+    if( queue_delayed_work( wq, &work_obj, 2*HZ ) )
+        printk( KERN_INFO "queue work successful\n" );
+    else
+        printk( KERN_ERR "queue work successful\n" );
+}
+
+static int __init mod_setup(void)
+{
+    printk(KERN_INFO "init module called\n");
+    wq = create_singlethread_workqueue( "DrvrSmpl" );
+    if( queue_delayed_work( wq, &work_obj, 2*HZ ) )
+        printk( KERN_INFO "queue work successful\n" );
+    else
+        printk( KERN_ERR "queue work successful\n" );
+    return 0;
+}
+
+static void __exit mod_cleanup(void)
+{
+    printk(KERN_INFO "exit module called\n");
+    cancel_delayed_work( &work_obj );
+    destroy_workqueue( wq );
+}
 /*
  * Event-Workqueue
  */
