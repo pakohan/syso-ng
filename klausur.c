@@ -26,7 +26,70 @@ static struct file_operations fops = {
 MODULE_LICENSE("GPL");
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+ * Atomic
+ */
 
+static atomic_t sem_read = ATOMIC_INIT(0);
+static atomic_t sem_write = ATOMIC_INIT(0);
+
+
+static int driver_open( struct inode *device, struct file *instance )
+{
+    printk(KERN_INFO "Open file called with flags %u\n", instance->f_flags);
+    if ( instance->f_flags & O_RDWR ) {
+        printk( KERN_ERR "Open device driver only allowed with flag O_RDONLY or O_WRONLY");
+        return -1;
+    } else if ( instance->f_flags & O_RDONLY ) {
+        if (atomic_inc_return(&sem_read) > 1) {
+            atomic_dec(&sem_read);
+            printk(KERN_ERR "File is already opened by another process for reading\n");
+            return -1;
+        }
+    } else if ( instance->f_flags & O_WRONLY ) {
+        if (atomic_inc_return(&sem_write) > 1) {
+            atomic_dec(&sem_write);
+            printk(KERN_ERR "File is already opened by another process for writing\n");
+            return -1;
+        }
+    }
+    printk(KERN_INFO "File has been opened\n");
+    return 0;
+}
+
+static int driver_close( struct inode *device, struct file *instance )
+{
+    printk(KERN_INFO "Close file called\n");
+    if ( instance->f_flags & O_RDONLY ) {
+        atomic_dec(&sem_read);
+    } else if ( instance->f_flags & O_WRONLY ) {
+        atomic_dec(&sem_write);
+    }
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+ * Wait Queues
+ */
+
+
+static wait_queue_head_t read_wq;
+static wait_queue_head_t write_wq;
+
+//In init_module
+init_waitqueue_head( &read_wq );
+init_waitqueue_head( &write_wq );
+
+// Read -- Write
+while (to_read > 0 ) {
+        wait_event_interruptible(read_wq, 'Bedingung' )
+        //do something
+}
+wake_up_interruptible(&write_wq);
+
+
+////////////////////////////////////////////////////////////////////////////////
 // Geraet anmelden:
     if (alloc_chrdev_region(&first, 0, NUMBER_DEVICES, "buf.c") < 0)
         goto error_exit;
