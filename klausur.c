@@ -2,6 +2,10 @@
 static int __init mod_setup(void);
 static void __exit mod_cleanup(void);
 
+// makros, um die init functions an- und abzumelden
+module_init( mod_setup );
+module_exit( mod_cleanup );
+
 // open and close functions
 static int driver_open( struct inode *device, struct file *instance );
 static int driver_close( struct inode *device, struct file *instance );
@@ -9,10 +13,6 @@ static int driver_close( struct inode *device, struct file *instance );
 // read and write functions
 static ssize_t driver_read(struct file *instance, char __user *buff, size_t count, loff_t *offp);
 static ssize_t driver_write(struct file *instance, const char __user *buff, size_t count, loff_t *offp);
-
-// makros, um die init functions an- und abzumelden
-module_init( mod_setup );
-module_exit( mod_cleanup );
 
 // pass to kernel at module_init function
 static struct file_operations fops = {
@@ -27,8 +27,8 @@ MODULE_LICENSE("GPL");
 
 ////////////////////////////////////////////////////////////////////////////////
 
- /*
- * Atomic Operationen
+/*
+ * Atomic
  */
 int atomic_read(atomic_t *v);
 int atomic_set(atomic_t *v, int i);
@@ -49,13 +49,8 @@ int test_and_clear_bit(int nr, volatile unsigned long * addr);
 int test_and_change_bit(int nr, volatile unsigned long* addr);
 int test_bit(int nr, const volatile void * addr);
 
-/*
- * Atomic
- */
-
 static atomic_t sem_read = ATOMIC_INIT(0);
 static atomic_t sem_write = ATOMIC_INIT(0);
-
 
 static int driver_open( struct inode *device, struct file *instance )
 {
@@ -90,12 +85,10 @@ static int driver_close( struct inode *device, struct file *instance )
     }
     return 0;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 /*
  * Wait Queues
  */
-
 
 static wait_queue_head_t read_wq;
 static wait_queue_head_t write_wq;
@@ -106,12 +99,9 @@ init_waitqueue_head( &write_wq );
 
 // Read -- Write
 while (to_read > 0 ) {
-        wait_event_interruptible(read_wq, 'Bedingung' )
-        //do something
+        wait_event_interruptible(read_wq, bedingung == 1)
 }
 wake_up_interruptible(&write_wq);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 static dev_t first;
 static struct class *cl1;
@@ -148,12 +138,6 @@ error_exit:
     printk(KERN_ERR "module loading failed\n");
     return -1;
 
-////////////////////////////////////////////////////////////////////////////////
-
-static dev_t first;
-static struct class *cl1;
-static struct cdev c_dev;
-
 // Geraet abmelden:
 static void __exit mod_cleanup(void)
 {
@@ -166,7 +150,7 @@ static void __exit mod_cleanup(void)
     unregister_chrdev_region(first, NUMBER_DEVICES);
     printk(KERN_INFO "module removed\n");
 }
-
+////////////////////////////////////////////////////////////////////////////////
 /*
  * Tasklet
  */
@@ -180,61 +164,47 @@ static void tasklet_func( unsigned long data )
 {
     printk(KERN_INFO "tasklet called\n");
 }
-//               Name,    Funktion,    Übergabewert
-DECLARE_TASKLET( tldescr, tasklet_func, 0L );
+//              Name,    Funktion,     Übergabewert
+DECLARE_TASKLET(tldescr, tasklet_func, 0L);
 
-static int __init mod_setup(void)
-{
-    tasklet_schedule( &tldescr );
-    return 0;
-}
+    tasklet_schedule(&tldescr); // anmelden
 
-static void __exit mod_cleanup(void)
-{
-    tasklet_kill( &tldescr );
-}
+    tasklet_kill(&tldescr); // abmelden
 ////////////////////////////////////////////////////////////////////////////////
 /*
  * Timer
  */
-static struct timer_list mytimer;
-static unsigned int start = 0;
-static unsigned long last_call = 0;
-
      init_timer     (mytimer);
 void add_timer      (struct timer_list *mytimer);
 int  mod_timer      (struct timer_list *mytimer, unsigned long expires);
 int  del_timer_sync (struct timer_list *mytimer);
 int  timer_pending  (struct timer_list * mytimer);
 
+static struct timer_list mytimer;
+static unsigned int start = 0;
+static unsigned long last_call = 0;
+
+
 static void timer_func( unsigned long data )
 {
-    unsigned int end = 0;
-    end = get_cycles();
-
-    printk(KERN_INFO "timer called at %ld (%ld); cycles since last call: %u\n", mytimer.expires, mytimer.expires-last_call, end-start);
-    last_call = mytimer.expires;
-    start = get_cycles();
+    // timer erneut schedulen (nach 2 Sekunden)
     mod_timer(&mytimer, jiffies + (2*HZ));
 }
 
 static int __init mod_setup(void)
 {
-    printk(KERN_INFO "init module called\n");
     init_timer( &mytimer );
     mytimer.function = timer_func;
     mytimer.data = 0;
     mytimer.expires = jiffies + (2*HZ);
-    start = get_cycles();
     add_timer( &mytimer );
     return 0;
 }
 
 static void __exit mod_cleanup(void)
 {
-    printk(KERN_INFO "exit module called\n");
     if (del_timer_sync( &mytimer) )
-        printk("Timer was active\n");
+        // timer war noch aktiv
 }
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -246,17 +216,13 @@ static DECLARE_COMPLETION( on_exit );
 
 static int thread_code( void *data )
 {
-    unsigned long timeout;
-    int i;
-
     allow_signal( SIGTERM );
-    /*for (i=0; i<5 && (kthread_should_stop()==0); i++ ) {*/
-    for ( i=0;;i++ ) {
+    for ( i=0;i<5;i++ ) {
         timeout=2*HZ;
         timeout=wait_event_interruptible_timeout( wq, (timeout==0), timeout );
         printk("thread_function: woke up ... %ld\n", timeout);
         if( timeout==-ERESTARTSYS ) {
-            printk("got signal, break\n");
+            // signal erhalten
             break;
         }
     }
@@ -265,9 +231,8 @@ static int thread_code( void *data )
 
 static int __init mod_setup(void)
 {
-    printk(KERN_INFO "init module called\n");
     init_waitqueue_head(&wq);
-    thread_id=kthread_create(thread_code,NULL,"mykthread");
+    thread_id=kthread_create(thread_code,NULL,"kthread_name");
     if ( thread_id==0 )
         return -EIO;
     wake_up_process( thread_id );
@@ -276,7 +241,6 @@ static int __init mod_setup(void)
 
 static void __exit mod_cleanup(void)
 {
-    printk(KERN_INFO "exit module called\n");
     kill_pid( task_pid(thread_id), SIGTERM, 1 );
     wait_for_completion( &on_exit );
 }
@@ -284,6 +248,8 @@ static void __exit mod_cleanup(void)
 /*
  * Workqueue
  */
+
+// work_queue_func >> work_obj >> work_queue
 
 // types
 struct workqueue_struct wq;
@@ -302,32 +268,12 @@ bool schedule_work          (struct work_struct *work);
 bool schedule_delayed_work  (struct delayed_work *dwork, unsigned long delay);
 void flush_scheduled_work   (void);
 
-static void work_queue_func( struct work_struct *work )
-{
-    printk(KERN_INFO "work queue func called\n" );
-    if( queue_delayed_work( wq, &work_obj, 2*HZ ) )
-        printk( KERN_INFO "queue work successful\n" );
-    else
-        printk( KERN_ERR "queue work successful\n" );
-}
-
-static int __init mod_setup(void)
-{
-    printk(KERN_INFO "init module called\n");
-    wq = create_singlethread_workqueue( "DrvrSmpl" );
-    if( queue_delayed_work( wq, &work_obj, 2*HZ ) )
-        printk( KERN_INFO "queue work successful\n" );
-    else
-        printk( KERN_ERR "queue work successful\n" );
-    return 0;
-}
-
-static void __exit mod_cleanup(void)
-{
-    printk(KERN_INFO "exit module called\n");
+    wq = create_singlethread_workqueue( "workqueue_name" );
+    if( queue_delayed_work( wq, &work_obj, 2*HZ ) != 0)
+        // FEHLER
+///
     cancel_delayed_work( &work_obj );
     destroy_workqueue( wq );
-}
 ////////////////////////////////////////////////////////////////////////////////
 /*
  * Event-Workqueue
@@ -396,26 +342,18 @@ write_lock_bh           (lock);
 read_unlock_bh          (lock);
 write_unlock_bh         (lock);
 
-static struct arch_spinlock_t lock;
-static spinlock_t my_lock;
- // In init_module
-spin_lock_init( &my_lock );
-
-static int driver_open( struct inode *device, struct file *instance )
-{
-    printk(KERN_INFO "Open file called\n");
+struct arch_spinlock_t lock;
+spinlock_t my_lock;
+// In init_module
+    spin_lock_init( &my_lock );
+///
     while (!spin_trylock( &lock ))
     {
-        printk(KERN_INFO "sleeping...\n");
         msleep( 200 );
     }
 
-    printk(KERN_INFO "got it...\n");
     msleep( 3000 );
     arch_spin_unlock( &lock );
-
-    return 0;
-}
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -810,4 +748,3 @@ void turn_off(int fpointer)
 {
         write(fpointer, "1", 1);
 }
-////////////////////////////////////////////////////////////////////////////////
