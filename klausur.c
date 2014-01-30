@@ -78,6 +78,7 @@ static void __exit mod_cleanup(void)
 {
     tasklet_kill( &tldescr );
 }
+////////////////////////////////////////////////////////////////////////////////
 /*
  * Timer
  */
@@ -114,6 +115,7 @@ static void __exit mod_cleanup(void)
     if (del_timer_sync( &mytimer) )
         printk("Timer was active\n");
 }
+////////////////////////////////////////////////////////////////////////////////
 /*
  * Kernel Thread
  */
@@ -157,6 +159,7 @@ static void __exit mod_cleanup(void)
     kill_pid( task_pid(thread_id), SIGTERM, 1 );
     wait_for_completion( &on_exit );
 }
+////////////////////////////////////////////////////////////////////////////////
 /*
  * Workqueue
  */
@@ -190,11 +193,12 @@ static void __exit mod_cleanup(void)
     cancel_delayed_work( &work_obj );
     destroy_workqueue( wq );
 }
+////////////////////////////////////////////////////////////////////////////////
 /*
  * Event-Workqueue
  */
  
- 
+ ////////////////////////////////////////////////////////////////////////////////
  /*
  * Semaphore
  */
@@ -217,7 +221,7 @@ static int driver_open( struct inode *device, struct file *instance )
 
     return 0;
 }
- 
+ ////////////////////////////////////////////////////////////////////////////////
  /*
  * Spinlock
  */
@@ -242,4 +246,4 @@ static int driver_open( struct inode *device, struct file *instance )
 
     return 0;
 }
-
+////////////////////////////////////////////////////////////////////////////////
