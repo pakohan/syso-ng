@@ -170,6 +170,12 @@ static void __exit mod_cleanup(void)
 /*
  * Tasklet
  */
+     DECLARE_TASKLET    (struct tasklet_struct name, void (*func)(unsigned long), unsigned long data);
+void tasklet_init       (struct tasklet_struct name, void (*func)(unsigned long), unsigned long data);
+void tasklet_schedule   (struct tasklet_struct *name);
+void tasklet_hi_schedule(struct tasklet_struct *name);
+void tasklet_kill       (struct tasklet_struct *name);
+
 static void tasklet_func( unsigned long data )
 {
     printk(KERN_INFO "tasklet called\n");
@@ -194,6 +200,12 @@ static void __exit mod_cleanup(void)
 static struct timer_list mytimer;
 static unsigned int start = 0;
 static unsigned long last_call = 0;
+
+     init_timer     (mytimer);
+void add_timer      (struct timer_list *mytimer);
+int  mod_timer      (struct timer_list *mytimer, unsigned long expires);
+int  del_timer_sync (struct timer_list *mytimer);
+int  timer_pending  (struct timer_list * mytimer);
 
 static void timer_func( unsigned long data )
 {
@@ -272,9 +284,23 @@ static void __exit mod_cleanup(void)
 /*
  * Workqueue
  */
-static struct workqueue_struct *wq;
-static void work_queue_func( struct work_struct *work );
-static DECLARE_DELAYED_WORK( work_obj, work_queue_func );
+
+// types
+struct workqueue_struct wq;
+struct work_struct work;
+void work_queue_func( struct work_struct *work );
+
+// init
+     DECLARE_DELAYED_WORK   (work_obj, work_queue_func);
+     DECLARE_WORK           (work_obj, work_queue_func);
+     create_workqueue       (name);
+void flush_workqueue        (struct workqueue_struct *wq);
+void destroy_workqueue      (struct workqueue_struct *wq);
+     INIT_WORK              (_work, _func);
+bool queue_work             (struct workqueue_struct *wq, struct work_struct *work);
+bool schedule_work          (struct work_struct *work);
+bool schedule_delayed_work  (struct delayed_work *dwork, unsigned long delay);
+void flush_scheduled_work   (void);
 
 static void work_queue_func( struct work_struct *work )
 {
@@ -305,53 +331,71 @@ static void __exit mod_cleanup(void)
 ////////////////////////////////////////////////////////////////////////////////
 /*
  * Event-Workqueue
+ * init nicht notwendig, es gibt nur eine im System!
  */
- 
- ////////////////////////////////////////////////////////////////////////////////
- /*
+
+bool schedule_work              (struct work_struct *work);
+bool schedule_delayed_work_on   (int cpu, struct delayed_work *dwork, unsigned long delay)
+void flush_scheduled_work       (void);
+////////////////////////////////////////////////////////////////////////////////
+/*
  * Semaphore
  */
- 
-// normal
-DEFINE_SEMAPHORE()
-void sema_init(struct semaphore *sem, int val);
-void down(struct semaphore *sem);
-void up(struct semaphore *sem);
-int down_trylock(struct semaphore *sem);
+
+// simple
+DEFINE_SEMAPHORE(my_sema)
+void sema_init         (struct semaphore *sem, int val);
+void down              (struct semaphore *sem);
+int  down_trylock      (struct semaphore *sem);
+int  down_interruptible(struct semaphore *sem);
+int  down_timeout      (struct semaphore *sem, long jiffies);
+void up                (struct semaphore *sem);
 
 // read / write
-down_read()
-down_read_trylock()
-down_write()
-down_write_trylock()
-downgrade_write()
-up_read()
-up_write()
+void down_read          (struct rw_semaphore *sem);
+int  down_read_trylock  (struct rw_semaphore *sem);
+void down_write         (struct rw_semaphore *sem);
+int  down_write_trylock (struct rw_semaphore *sem);
+void downgrade_write    (struct rw_semaphore *sem);
+void up_read            (struct rw_semaphore *sem);
+void up_write           (struct rw_semaphore *sem);
 
- DEFINE_SEMAPHORE( sem );
- 
- // In init_module
-sema_init( &sem, 1 );
- 
-static int driver_open( struct inode *device, struct file *instance )
-{
-    printk(KERN_INFO "Open file called\n");
-    while ( down_trylock(&sem) ) {
-        printk(KERN_INFO "sleeping...\n");
-        msleep( 200 );
-    }
-
-    printk(KERN_INFO "got it...\n");
-    msleep( 3000 );
-    up( &sem );
-
-    return 0;
-}
  ////////////////////////////////////////////////////////////////////////////////
- /*
+/*
  * Spinlock
  */
- 
+
+// simple
+spinlock_t my_lock = SPIN_LOCK_UNLOCKED;
+spin_lock_init( &my_lock );
+void spin_lock              (spinlock_t *lock);
+void spin_unlock            (spinlock_t *lock);
+void spin_lock_irq          (spinlock_t *lock);
+void spin_unlock_irq        (spinlock_t *lock);
+     spin_lock_irqsave      (lock, flags);
+void spin_unlock_irqrestore (spinlock_t *lock, unsigned long flags);
+void spin_lock_bh           (spinlock_t *lock);
+void spin_unlock_bh         (spinlock_t *lock);
+int  spin_trylock           (spinlock_t *lock);
+
+// read / write
+read_lock               (lock);
+write_lock              (lock);
+read_unlock             (lock);
+write_unlock            (lock);
+read_lock_irq           (lock);
+write_lock_irq          (lock);
+read_unlock_irq         (lock);
+write_unlock_irq        (lock);
+read_lock_irqsave       (lock, flags);
+write_lock_irqsave      (lock, flags);
+read_unlock_irqrestore  (lock, flags);
+write_unlock_irqrestore (lock, flags);
+read_lock_bh            (lock);
+write_lock_bh           (lock);
+read_unlock_bh          (lock);
+write_unlock_bh         (lock);
+
 static struct arch_spinlock_t lock;
 static spinlock_t my_lock;
  // In init_module
@@ -373,8 +417,9 @@ static int driver_open( struct inode *device, struct file *instance )
     return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
-
- /*
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/*
  * mygpio
  */
 
@@ -455,13 +500,13 @@ static void set_pin( int pin_nr, int dir )
         printk(KERN_ERR "undefined pin %d\n", pin_nr);
         return;
     }
-    
+
     if( dir != 1 && dir != 0 )
     {
         printk(KERN_ERR "undefined direction %d\n", dir);
         return;
     }
-    
+
     ptr = (u32*) (START_REGISTER + ((pin_nr / 10) * 0x4));
     /*atomarer bereich ... bei verschiedenen pins*/
     old_value = readl( ptr );
@@ -485,7 +530,7 @@ static void write_pin( int pin_nr, u32 start_reg, int val2 )
         printk(KERN_ERR "undefined pin %d\n", pin_nr);
         return;
     }
-        
+
         ptr = (u32*) (start_reg + ((pin_nr / 32) * 0x4));
         pos = pin_nr % 32;
         wmb();
@@ -503,13 +548,13 @@ static u32 read_pin( int pin_nr, u32 start_reg )
         printk(KERN_ERR "undefined pin %d\n", pin_nr);
         return 0;
     }
-        
+
         ptr = (u32*) (start_reg + ((pin_nr / 32) * 0x4));
         val = readl( ptr );
         rmb();
         pos = pin_nr % 32;
         val = val & 1 << pos;
-        
+
     return val;
 }
 
@@ -530,9 +575,9 @@ static ssize_t driver_read(struct file *instance, char __user *buff, size_t coun
         int not_copied;
         int to_copy = 2;
     u32 value;
-    
+
     value = read_pin( SWITCH, LEV_REGISTER );
-                
+
     if(value == 0)
     {
                 not_copied = copy_to_user( buff, "1", to_copy);
@@ -541,7 +586,7 @@ static ssize_t driver_read(struct file *instance, char __user *buff, size_t coun
         {
                 not_copied = copy_to_user( buff, "0", to_copy);
         }
-        
+
 
         return to_copy - not_copied;
 }
@@ -552,10 +597,10 @@ static ssize_t driver_write(struct file *instance, const char __user *buff, size
         int value;
         int not_copied = 0;
         int to_copy = count;
-        
-        
+
+
         not_copied = kstrtoint_from_user(buff, count, 0, &value);
-        
+
         if(value == 1)
         {
                 write_pin( LED, CLEAR_REGISTER, 1 );
@@ -596,7 +641,7 @@ int  main()
 
     int button;
     int led;
-    
+
     int export = open(EXPORT, O_WRONLY);
         if (export < 0)
         {
@@ -616,7 +661,7 @@ int  main()
     sigaction(SIGINT, &new_action, NULL);
 
 
-        
+
         int direction25 = open(BUTTON "direction", O_WRONLY);
         if (export < 0)
         {
@@ -625,14 +670,14 @@ int  main()
 
         write(direction25, "in", 2);
         close(direction25);
-        
-        
+
+
     if (pthread_create(&blinker, NULL, &blink_worker, NULL) != 0)
     {
         fprintf(stderr, "could not create thread\n");
         return 1;
     }
-    
+
 
 
     int val;
@@ -647,9 +692,9 @@ int  main()
                 }
                 read(device, value, 2);
                 close(device);
-        
+
         val = atoi(value);
-                
+
         if(val == 0)
         {
                         if (button_state == 0)
@@ -671,13 +716,13 @@ int  main()
         sched_yield();
         usleep(20000);
     }
-    
-    
-    pthread_join(blinker, NULL);
-    
-    
 
-      
+
+    pthread_join(blinker, NULL);
+
+
+
+
     return 0;
 }
 
@@ -686,7 +731,7 @@ void *blink_worker(void *arg)
         struct timespec times;
         times.tv_sec = 0;
         times.tv_nsec = 100000000;
-        
+
         int led = open(LED "direction", O_WRONLY);
         if (led < 0)
         {
@@ -716,7 +761,7 @@ void *blink_worker(void *arg)
             }
             turn_off(led);
         }
-        
+
         if( close(led) == EOF )
     {
                 fprintf(stderr, "could not close '%s'\n", LED);
@@ -741,18 +786,18 @@ void signal_handler(int value)
     {
                 fprintf(stderr, "could not close '%s'\n", LED);
     }
-        
+
         int unexport = open(UNEXPORT, O_WRONLY);
         if (unexport < 0)
         {
                 fprintf(stderr, "could not open '%s'\n", EXPORT);
         }
-        
+
         write(unexport, "18", 2);
         write(unexport, "25", 2);
-        
+
         close(unexport);
-        
+
     _exit(value);
 }
 
