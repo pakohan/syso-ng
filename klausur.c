@@ -193,3 +193,29 @@ static void __exit mod_cleanup(void)
 /*
  * Event-Workqueue
  */
+ 
+ 
+ /*
+ * Semaphore
+ */
+ DEFINE_SEMAPHORE( sem );
+ 
+ // In init_module
+ sema_init( &sem, 1 );
+ 
+static int driver_open( struct inode *device, struct file *instance )
+{
+    printk(KERN_INFO "Open file called\n");
+    while ( down_trylock(&sem) ) {
+        printk(KERN_INFO "sleeping...\n");
+        msleep( 200 );
+    }
+
+    printk(KERN_INFO "got it...\n");
+    msleep( 3000 );
+    up( &sem );
+
+    return 0;
+}
+ 
+ 
