@@ -113,7 +113,12 @@ wake_up_interruptible(&write_wq);
 
 
 ////////////////////////////////////////////////////////////////////////////////
+static dev_t first;
+static struct class *cl1;
+static struct cdev c_dev;
+
 // Geraet anmelden:
+static int __init mod_setup(void){
     if (alloc_chrdev_region(&first, 0, NUMBER_DEVICES, "buf.c") < 0)
         goto error_exit;
 
@@ -144,6 +149,24 @@ error_exit:
     return -1;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static dev_t first;
+static struct class *cl1;
+static struct cdev c_dev;
+
+// Geraet abmelden:
+static void __exit mod_cleanup(void)
+{
+    int i = 0;
+    cdev_del(&c_dev);
+    for (i = 0; i < NUMBER_DEVICES; i++) {
+        device_destroy(cl1, MKDEV(MAJOR(first), MINOR(first) + i));
+    }
+    class_destroy(cl1);
+    unregister_chrdev_region(first, NUMBER_DEVICES);
+    printk(KERN_INFO "module removed\n");
+}
+
 /*
  * Tasklet
  */
