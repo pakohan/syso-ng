@@ -26,6 +26,29 @@ static struct file_operations fops = {
 MODULE_LICENSE("GPL");
 
 ////////////////////////////////////////////////////////////////////////////////
+
+ /*
+ * Atomic Operationen
+ */
+int atomic_read(atomic_t *v);
+int atomic_set(atomic_t *v, int i);
+int atomic_add(int i, atomic_t *v);
+int atomic_sub(int i, atomic_t *v);
+int atomic_inc(atomic_t *v);
+int atomic_dec(atomic_t *v);
+int atomic_sub_and_test(int i, atomic_t *v);
+int atomic_inc_and_test(atomic_t *v);
+int atomic_dec_and_test(atomic_t *v);
+int atomic_add_negative(int i, atomic_t *v);
+
+void set_bit(int nr, volatile unsigned long * addr);
+void clear_bit(int nr, volatile unsigned long * addr);
+void change_bit(int nr, volatile unsigned long * addr
+int test_and_set_bit(int nr, volatile unsigned long * addr);
+int test_and_clear_bit(int nr, volatile unsigned long * addr);
+int test_and_change_bit(int nr, volatile unsigned long* addr);
+int test_bit(int nr, const volatile void * addr);
+
 /*
  * Atomic
  */
@@ -310,3 +333,8 @@ static int driver_open( struct inode *device, struct file *instance )
     return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
