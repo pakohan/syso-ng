@@ -1,0 +1,14 @@
+config BR2_PACKAGE_USERPROG
+	bool "userprog"
+	help
+	  This aren't the droids you're looking for.
+
+	  http://www.google.com/
+
+config BR2_PACKAGE_USERPROG_STATIC
+	bool "compile static"
+	depends on BR2_PACKAGE_USERPROG
+	help
+	  This aren't the droids you're looking for.
+
+	  http://www.google.com/

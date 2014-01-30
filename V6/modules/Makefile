@@ -1,4 +1,4 @@
-TP_SOURCES=buf.c hello2.c tasklet.c timer.c kthread.c wq.c lock.c open_once.c buf_threaded.c
+TP_SOURCES=mygpio.c
 TP_OBJECTS=$(TP_SOURCES:.c=.o)
 
 ifneq ($(KERNELRELEASE),)
